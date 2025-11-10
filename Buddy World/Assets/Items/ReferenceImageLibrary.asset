@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 848409ee8ba454f42a5ddff137688a27, type: 3}
+  m_Name: ReferenceImageLibrary
+  m_EditorClassIdentifier: 
+  m_GuidLow: 5165325249431050125
+  m_GuidHigh: 6775089243230054528
+  m_DataStore:
+    m_Storage: []
+  m_Images:
+  - m_SerializedGuid:
+      m_GuidLow: 5214146752038102790
+      m_GuidHigh: 6371662755229185965
+    m_SerializedTextureGuid:
+      m_GuidLow: 266892250385799497
+      m_GuidHigh: 11947906199603442232
+    m_Size: {x: 0.1, y: 0.056118146}
+    m_SpecifySize: 1
+    m_Name: roblox
+    m_Texture: {fileID: 0}
