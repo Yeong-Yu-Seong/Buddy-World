@@ -18,12 +18,12 @@ MonoBehaviour:
     m_Storage: []
   m_Images:
   - m_SerializedGuid:
-      m_GuidLow: 5214146752038102790
-      m_GuidHigh: 6371662755229185965
+      m_GuidLow: 5278506899795754186
+      m_GuidHigh: 1898107625758157204
     m_SerializedTextureGuid:
-      m_GuidLow: 266892250385799497
-      m_GuidHigh: 11947906199603442232
-    m_Size: {x: 0.1, y: 0.056118146}
+      m_GuidLow: 5923465076700603367
+      m_GuidHigh: 12216775841850709305
+    m_Size: {x: 0.133, y: 0.133}
     m_SpecifySize: 1
-    m_Name: roblox
+    m_Name: octopus sample
     m_Texture: {fileID: 0}
