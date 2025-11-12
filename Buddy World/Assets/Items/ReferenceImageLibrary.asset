@@ -27,3 +27,13 @@ MonoBehaviour:
     m_SpecifySize: 1
     m_Name: octopus sample
     m_Texture: {fileID: 0}
+  - m_SerializedGuid:
+      m_GuidLow: 5370824998138180283
+      m_GuidHigh: 16358864664196227993
+    m_SerializedTextureGuid:
+      m_GuidLow: 15196483055678239586
+      m_GuidHigh: 8783945609745606472
+    m_Size: {x: 0.15, y: 0.2}
+    m_SpecifySize: 1
+    m_Name: dog card
+    m_Texture: {fileID: 0}
