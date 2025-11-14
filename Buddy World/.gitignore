@@ -79,4 +79,4 @@ Assets/Plugins/Firebase
 Assets/Plugins
 Assets/TextMesh Pro
 *.dll
-google-services.json
+/Buddy World/Assets/google-services.json
