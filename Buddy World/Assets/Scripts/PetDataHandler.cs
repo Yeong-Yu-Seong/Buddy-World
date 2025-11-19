@@ -6,6 +6,7 @@
                  and updates the UI accordingly. It also manages hunger and happiness
                  levels of the pet over time and through user interactions.
     Info: This script is written with the help of the fix code function.
+    Note to reviewers: Write cooldown logic so that feeding and playing cannot be spammed.
 */
 using UnityEngine;
 using UnityEngine.UI;
@@ -14,30 +15,46 @@ using Firebase.Database;
 using Firebase.Auth;
 using Firebase.Extensions;
 using System;
+using System.Collections;
 
 public class PetDataHandler : MonoBehaviour
 {
+    /// <summary>
+    /// UI Elements to display pet data
+    /// </summary>
     [SerializeField]
-    private TMP_Text petNameText;
+    private TMP_Text petNameText; // Text element to display pet name
     [SerializeField]
-    private TMP_Text ownerIDText;
+    private TMP_Text ownerIDText; // Text element to display owner ID
     [SerializeField]
-    private TMP_Text petLevelText;
+    private TMP_Text petLevelText; // Text element to display pet level
     [SerializeField]
-    private TMP_Text petHungerText;
+    private TMP_Text petHungerText; // Text element to display pet hunger
     [SerializeField]
-    private TMP_Text petHappinessText;
+    private TMP_Text petHappinessText; // Text element to display pet happiness
     [SerializeField]
-    private TMP_Text lastFedText;
+    private TMP_Text lastFedText; // Text element to display last fed time
+    /// <summary>
+    /// Reference to the pet data UI object
+    /// </summary>
     [SerializeField]
-    private GameObject petDataObject;
-    private string petName;
-    private int hunger;
-    private int happiness;
-    // Timer to run hunger/happiness updates on a time interval instead of frame count
-    private float hungerTimer = 0f;
-    private const float hungerInterval = 5f; // seconds; adjust as needed for testing
-    private bool isPetDataLoaded = false;
+    private GameObject petDataObject; // Reference to the pet data UI object
+    /// <summary>
+    /// Pet data fields
+    /// </summary>
+    private string petName; // Current pet name
+    private int hunger; // hunger level
+    private int happiness; // happiness level
+    private int level; // pet level
+    /// <summary>
+    /// Timer to run hunger/happiness updates on a time interval instead of frame count
+    /// </summary>
+    private float hungerTimer = 0f; // Timer to track hunger updates
+    private const float hungerInterval = 5f; // seconds (for testing, adjust as needed)
+    /// <summary>
+    /// Flag to track if pet data has been loaded
+    /// </summary>
+    private bool isPetDataLoaded = false; // Flag to track if pet data has been loaded
     
     /// <summary>
     /// Decrease hunger when time passes
@@ -227,6 +244,9 @@ public class PetDataHandler : MonoBehaviour
         });
     }
 
+    /// <summary>
+    /// Load pet data from Firebase Realtime Database
+    /// </summary>
     public void LoadPetData()
     {
         var db = FirebaseDatabase.DefaultInstance.RootReference;
@@ -264,6 +284,56 @@ public class PetDataHandler : MonoBehaviour
                 petName = pet.petName;
                 Debug.Log("Pet data loaded successfully.");
             }
+        });
+    }
+
+    /// <summary>
+    /// Increase pet level when happiness reaches 100
+    /// Reset hunger and happiness to 10 upon leveling up
+    /// </summary>
+    public void IncreaseLevel(string petName)
+    {
+        var db = FirebaseDatabase.DefaultInstance.RootReference;
+        var user = Firebase.Auth.FirebaseAuth.DefaultInstance.CurrentUser;
+        if (user == null)
+        {
+            Debug.LogWarning("No signed-in user; cannot increase level.");
+            return;
+        }
+        petName = this.petName;
+
+        db.Child(user.UserId).Child("pets").Child(petName).GetValueAsync().ContinueWithOnMainThread(task =>
+        {
+            if (task.IsFaulted || task.IsCanceled)
+            {
+                Debug.LogError("Failed to retrieve pet data: " + (task.Exception != null ? task.Exception.Message : "Task canceled"));
+                return;
+            }
+
+            DataSnapshot snapshot = task.Result;
+            string json = snapshot.GetRawJsonValue();
+            Pet pet = JsonUtility.FromJson<Pet>(json);
+
+            pet.level += 1; // Increase level by 1
+            level = pet.level;
+            hunger = 10;
+            happiness = 10;
+            pet.hunger = hunger;
+            pet.happiness = happiness;
+            string updatedJson = JsonUtility.ToJson(pet);
+            db.Child(user.UserId).Child("pets").Child(petName).SetRawJsonValueAsync(updatedJson).ContinueWithOnMainThread(updateTask =>
+            {
+                if (updateTask.IsFaulted || updateTask.IsCanceled)
+                {
+                    Debug.LogError("Failed to update pet data: " + (updateTask.Exception != null ? updateTask.Exception.Message : "Task canceled"));
+                }
+                else
+                {
+                    petLevelText.text = "Level: " + pet.level.ToString();
+                    petHungerText.text = "Hunger: " + pet.hunger.ToString();
+                    petHappinessText.text = "Happiness: " + pet.happiness.ToString();
+                }
+            });
         });
     }
 
@@ -319,7 +389,11 @@ public class PetDataHandler : MonoBehaviour
             {
                 DecreaseHappinessAndHunger(petName, 1);
             }
-
+            // Increase level if happiness reaches 100
+            if (happiness == 100)
+            {
+                IncreaseLevel(petName);
+            }
         }
     }
 }
