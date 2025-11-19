@@ -1,8 +1,7 @@
 /* Author: Yeong Yu Seong
    Date: 11 November 2025
    Last Modified: 12 November 2025
-   Description: This script initializes a connection to Firebase Realtime Database
-                and adds a pet object for a user (for testing purposes).
+   Description: Database manager script to handle pet data structure.
 */
 using UnityEngine;
 using Firebase.Database;

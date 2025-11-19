@@ -171,7 +171,7 @@ public class AccountManager : MonoBehaviour
                     if (!task.Result.Exists)
                     {
                         Debug.Log("No pets found for this user. Creating a default pet.");
-                        var dog = new Pet("Dog", FirebaseAuth.DefaultInstance.CurrentUser.UserId, 1, 100, 100, System.DateTime.Now.ToString());
+                        var dog = new Pet("Dog", FirebaseAuth.DefaultInstance.CurrentUser.UserId, 1, 50, 50, System.DateTime.Now.ToString());
                         string json = JsonUtility.ToJson(dog);
                         db.Child(FirebaseAuth.DefaultInstance.CurrentUser.UserId).Child("pets").Child("Dog")
                           .SetRawJsonValueAsync(json)
