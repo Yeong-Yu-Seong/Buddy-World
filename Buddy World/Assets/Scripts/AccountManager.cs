@@ -1,7 +1,7 @@
 /* Author: Yeong Yu Seong
    Date: 11 November 2025
-   Last Modified: 12 November 2025
-   Description: This script manages user accounts.
+   Last Modified: 20 November 2025
+   Description: Account manager script to handle user sign-up, sign-in, and sign-out.
    Info: This script is written with the help of the fix code function.
 */
 using UnityEngine;
@@ -13,6 +13,7 @@ using TMPro;
 using Firebase.Auth;
 using Firebase;
 using System;
+using UnityEngine.UI;
 
 public class AccountManager : MonoBehaviour
 {
@@ -36,6 +37,8 @@ public class AccountManager : MonoBehaviour
     private Canvas gameplayCanvas;
     [SerializeField]
     private TMP_Text loadingText;
+    [SerializeField]
+    private Image howToPlayImage; // First page of how to play
     /// <summary>
     /// Reference to the Firebase Realtime Database.
     /// </summary>
@@ -155,6 +158,7 @@ public class AccountManager : MonoBehaviour
             }
 
             Debug.Log($"Signed in successfully: {task.Result.User.UserId}");
+            howToPlayImage.gameObject.SetActive(true);
             //retrieve pet data
             var retrieveTask = db.Child(FirebaseAuth.DefaultInstance.CurrentUser.UserId).Child("pets").GetValueAsync();
             retrieveTask.ContinueWithOnMainThread(task =>
@@ -233,6 +237,7 @@ public class AccountManager : MonoBehaviour
         {
             Debug.LogWarning("SignOut threw an exception: " + ex.Message);
         }
+        howToPlayImage.enabled = true;
         StartCoroutine(ShowLoadingThenSignIn(1.5f));
     }
 
@@ -242,6 +247,7 @@ public class AccountManager : MonoBehaviour
         signInCanvas.enabled = true;
         loadingCanvas.enabled = false;
         gameplayCanvas.enabled = false;
+        howToPlayImage.enabled = false;
         db = FirebaseDatabase.DefaultInstance.RootReference;
     }
     IEnumerator CanvasTimer(float delay)
@@ -260,6 +266,7 @@ public class AccountManager : MonoBehaviour
         yield return new WaitForSeconds(delay);
         loadingCanvas.enabled = false;
         gameplayCanvas.enabled = true;
+        howToPlayImage.enabled = true;
     }
 
     /// <summary>
