@@ -79,4 +79,5 @@ Assets/Plugins/Firebase
 Assets/Plugins
 Assets/TextMesh Pro
 *.dll
-/Buddy World/Assets/google-services.json
+Assets/google-services.json
+Assets/GoogleService-Info.plist
