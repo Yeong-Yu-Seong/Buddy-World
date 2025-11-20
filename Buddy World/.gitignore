@@ -81,3 +81,5 @@ Assets/TextMesh Pro
 *.dll
 Assets/google-services.json
 Assets/GoogleService-Info.plist
+Assets/google-services.json.meta
+Assets/GoogleService-Info.plist.meta
