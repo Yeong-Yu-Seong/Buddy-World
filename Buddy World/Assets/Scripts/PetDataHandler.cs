@@ -2,9 +2,7 @@
     Author: Yeong Yu Seong
     Date Created: 12 November 2025
     Date Modified: 23 November 2025
-    Description: This script loads pet data from Firebase Realtime Database
-                 and updates the UI accordingly. It also manages hunger and happiness
-                 levels of the pet over time and through user interactions.
+    Description: Script to handle pet data operations such as loading, updating hunger/happiness, leveling up, and renaming.
     Info: This script is written with the help of the fix code function.
     Note to reviewers: Write cooldown logic so that feeding and playing cannot be spammed.
 */
@@ -55,6 +53,14 @@ public class PetDataHandler : MonoBehaviour
     /// Flag to track if pet data has been loaded
     /// </summary>
     private bool isPetDataLoaded = false; // Flag to track if pet data has been loaded
+    /// <summary>
+    /// UI Elements for renaming pet
+    /// </summary>
+    [SerializeField]
+    private TMP_InputField renameInputField; // Input field for renaming pet
+    [SerializeField]
+    private TMP_Text petNames; // Text element to display pet name in rename section
+    private string newPetName; // New pet name for renaming
     
     /// <summary>
     /// Decrease hunger when time passes
@@ -334,6 +340,60 @@ public class PetDataHandler : MonoBehaviour
                     petLevelText.text = "Level: " + pet.level.ToString();
                     petHungerText.text = "Hunger: " + pet.hunger.ToString();
                     petHappinessText.text = "Happiness: " + pet.happiness.ToString();
+                }
+            });
+        });
+    }
+
+    /// <summary>
+    /// Display current and new pet name in rename section
+    /// </summary>
+    public void DisplayPetNameInRenameSection()
+    {
+        petNames.text = $"Current: {petName}\nNew: {renameInputField.text}";
+    }
+
+    /// <summary>
+    /// Rename pet in the database and update UI
+    /// </summary>
+    public void RenamePet(string newName)
+    {
+        var db = FirebaseDatabase.DefaultInstance.RootReference;
+        var user = Firebase.Auth.FirebaseAuth.DefaultInstance.CurrentUser;
+        if (user == null)
+        {
+            Debug.LogWarning("No signed-in user; cannot rename pet.");
+            return;
+        }
+        string oldName = petName;
+        newName = renameInputField.text;
+
+        db.Child(user.UserId).Child("pets").Child(oldName).GetValueAsync().ContinueWithOnMainThread(task =>
+        {
+            if (task.IsFaulted || task.IsCanceled)
+            {
+                Debug.LogError("Failed to retrieve pet data: " + (task.Exception != null ? task.Exception.Message : "Task canceled"));
+                return;
+            }
+
+            DataSnapshot snapshot = task.Result;
+            string json = snapshot.GetRawJsonValue();
+            Pet pet = JsonUtility.FromJson<Pet>(json);
+
+            pet.petName = newName; // Update pet name
+            string updatedJson = JsonUtility.ToJson(pet);
+            db.Child(user.UserId).Child("pets").Child(newName).SetRawJsonValueAsync(updatedJson).ContinueWithOnMainThread(updateTask =>
+            {
+                if (updateTask.IsFaulted || updateTask.IsCanceled)
+                {
+                    Debug.LogError("Failed to update pet data: " + (updateTask.Exception != null ? updateTask.Exception.Message : "Task canceled"));
+                }
+                else
+                {
+                    // Optionally delete old pet entry
+                    db.Child(user.UserId).Child("pets").Child(oldName).RemoveValueAsync();
+                    petNameText.text = "Pet Name: " + newName;
+                    petName = newName;
                 }
             });
         });
