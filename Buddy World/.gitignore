@@ -83,3 +83,5 @@ Assets/google-services.json
 Assets/GoogleService-Info.plist
 Assets/google-services.json.meta
 Assets/GoogleService-Info.plist.meta
+Assets/StreamingAssets/google-services.json
+Assets/StreamingAssets/google-services.json.meta
