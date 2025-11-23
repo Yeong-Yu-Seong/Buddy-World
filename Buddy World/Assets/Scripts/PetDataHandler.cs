@@ -1,7 +1,7 @@
 /*
     Author: Yeong Yu Seong
     Date Created: 12 November 2025
-    Date Modified: 19 November 2025
+    Date Modified: 23 November 2025
     Description: This script loads pet data from Firebase Realtime Database
                  and updates the UI accordingly. It also manages hunger and happiness
                  levels of the pet over time and through user interactions.
@@ -273,16 +273,18 @@ public class PetDataHandler : MonoBehaviour
             {
                 string json = petSnapshot.GetRawJsonValue();
                 Pet pet = JsonUtility.FromJson<Pet>(json);
-
-                // Update UI elements with pet data
-                petNameText.text = "Name: " + pet.petName;
+                // Get correct pet data from all the pets under this user
+                petName = pet.petName;
+                petNameText.text = "Pet Name: " + pet.petName;
                 ownerIDText.text = "Owner ID: " + pet.ownerID;
                 petLevelText.text = "Level: " + pet.level.ToString();
                 petHungerText.text = "Hunger: " + pet.hunger.ToString();
                 petHappinessText.text = "Happiness: " + pet.happiness.ToString();
                 lastFedText.text = "Last Fed: " + pet.lastFed;
-                petName = pet.petName;
-                Debug.Log("Pet data loaded successfully.");
+                hunger = pet.hunger;
+                happiness = pet.happiness;
+                level = pet.level;
+                Debug.Log("Loaded pet data for pet: " + pet.petName);
             }
         });
     }

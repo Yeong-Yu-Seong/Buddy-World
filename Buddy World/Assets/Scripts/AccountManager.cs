@@ -1,6 +1,6 @@
 /* Author: Yeong Yu Seong
    Date: 11 November 2025
-   Last Modified: 20 November 2025
+   Last Modified: 23 November 2025
    Description: Account manager script to handle user sign-up, sign-in, and sign-out.
    Info: This script is written with the help of the fix code function.
 */
@@ -174,11 +174,30 @@ public class AccountManager : MonoBehaviour
                     // If no pets node exists, create a default pet
                     if (!task.Result.Exists)
                     {
-                        Debug.Log("No pets found for this user. Creating a default pet.");
+                        Debug.Log("No pets found for this user. Creating default pets.");
+                        // Create default pets
+                        /*
+                        Template for adding more pets in the future
+                        var petName = new Pet("PetName", FirebaseAuth.DefaultInstance.CurrentUser.UserId, 1, 50, 50, System.DateTime.Now.ToString());
+                        string jsonPetName = JsonUtility.ToJson(petName);
+                        db.Child(FirebaseAuth.DefaultInstance.CurrentUser.UserId).Child("pets").Child("PetName")
+                          .SetRawJsonValueAsync(jsonPetName)
+                          .ContinueWithOnMainThread(t =>
+                          {
+                              if (t.IsFaulted || t.IsCanceled)
+                                  Debug.LogError("Failed to add PetName: " + (t.Exception != null ? t.Exception.Message : "Task canceled"));
+                              else
+                                  Debug.Log("PetName added to database.");
+                          });
+                        */
                         var dog = new Pet("Dog", FirebaseAuth.DefaultInstance.CurrentUser.UserId, 1, 50, 50, System.DateTime.Now.ToString());
-                        string json = JsonUtility.ToJson(dog);
+                        var octopus = new Pet("Octopus", FirebaseAuth.DefaultInstance.CurrentUser.UserId, 1, 50, 50, System.DateTime.Now.ToString());
+                        
+                        string jsonDog = JsonUtility.ToJson(dog);
+                        string jsonOctopus = JsonUtility.ToJson(octopus);
+                        // Save the default pet to the database
                         db.Child(FirebaseAuth.DefaultInstance.CurrentUser.UserId).Child("pets").Child("Dog")
-                          .SetRawJsonValueAsync(json)
+                          .SetRawJsonValueAsync(jsonDog)
                           .ContinueWithOnMainThread(t =>
                           {
                               if (t.IsFaulted || t.IsCanceled)
@@ -186,7 +205,15 @@ public class AccountManager : MonoBehaviour
                               else
                                   Debug.Log("Dog added to database.");
                           });
-                        return;
+                        db.Child(FirebaseAuth.DefaultInstance.CurrentUser.UserId).Child("pets").Child("Octopus")
+                          .SetRawJsonValueAsync(jsonOctopus)
+                          .ContinueWithOnMainThread(t =>
+                          {
+                              if (t.IsFaulted || t.IsCanceled)
+                                  Debug.LogError("Failed to add Octopus: " + (t.Exception != null ? t.Exception.Message : "Task canceled"));
+                              else
+                                  Debug.Log("Octopus added to database.");
+                          });
                     }
 
                     // If pets node exists it may contain multiple child pet entries, so iterate children
