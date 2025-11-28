@@ -43,6 +43,7 @@ public class AccountManager : MonoBehaviour
     /// Reference to the Firebase Realtime Database.
     /// </summary>
     private DatabaseReference db;
+    public bool newUser = false;
     
     /// <summary>
     /// Creates a new user account with the provided email and password.
@@ -103,7 +104,9 @@ public class AccountManager : MonoBehaviour
                 errorText.text = "User created successfully, please sign in!";
 
                 var uid = task.Result.User.UserId;
+                db.Child("users").Child(uid).Child("email").SetValueAsync(EmailInput.text);
                 Debug.Log($"Created user UID: {uid}");
+                newUser = true;
             }
         });
     }

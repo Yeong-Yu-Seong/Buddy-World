@@ -61,6 +61,7 @@ public class PetDataHandler : MonoBehaviour
     [SerializeField]
     private TMP_Text petNames; // Text element to display pet name in rename section
     private string newPetName; // New pet name for renaming
+    AccountManager accountManager;
     
     /// <summary>
     /// Decrease hunger when time passes
@@ -76,7 +77,7 @@ public class PetDataHandler : MonoBehaviour
             return;
         }
 
-        db.Child(user.UserId).Child("pets").Child(petName).GetValueAsync().ContinueWithOnMainThread(task =>
+        db.Child("users").Child(user.UserId).Child("pets").Child(petName).GetValueAsync().ContinueWithOnMainThread(task =>
         {
             if (task.IsFaulted || task.IsCanceled)
             {
@@ -93,7 +94,7 @@ public class PetDataHandler : MonoBehaviour
             hunger = pet.hunger;
 
             string updatedJson = JsonUtility.ToJson(pet);
-            db.Child(user.UserId).Child("pets").Child(petName).SetRawJsonValueAsync(updatedJson).ContinueWithOnMainThread(updateTask =>
+            db.Child("users").Child(user.UserId).Child("pets").Child(petName).SetRawJsonValueAsync(updatedJson).ContinueWithOnMainThread(updateTask =>
             {
                 if (updateTask.IsFaulted || updateTask.IsCanceled)
                 {
@@ -123,7 +124,7 @@ public class PetDataHandler : MonoBehaviour
         }
         petName = this.petName;
 
-        db.Child(user.UserId).Child("pets").Child(petName).GetValueAsync().ContinueWithOnMainThread(task =>
+        db.Child("users").Child(user.UserId).Child("pets").Child(petName).GetValueAsync().ContinueWithOnMainThread(task =>
         {
             if (task.IsFaulted || task.IsCanceled)
             {
@@ -142,7 +143,7 @@ public class PetDataHandler : MonoBehaviour
             hunger = pet.hunger;
 
             string updatedJson = JsonUtility.ToJson(pet);
-            db.Child(user.UserId).Child("pets").Child(petName).SetRawJsonValueAsync(updatedJson).ContinueWithOnMainThread(updateTask =>
+            db.Child("users").Child(user.UserId).Child("pets").Child(petName).SetRawJsonValueAsync(updatedJson).ContinueWithOnMainThread(updateTask =>
             {
                 if (updateTask.IsFaulted || updateTask.IsCanceled)
                 {
@@ -172,7 +173,7 @@ public class PetDataHandler : MonoBehaviour
             return;
         }
 
-        db.Child(user.UserId).Child("pets").Child(petName).GetValueAsync().ContinueWithOnMainThread(task =>
+        db.Child("users").Child(user.UserId).Child("pets").Child(petName).GetValueAsync().ContinueWithOnMainThread(task =>
         {
             if (task.IsFaulted || task.IsCanceled)
             {
@@ -190,7 +191,7 @@ public class PetDataHandler : MonoBehaviour
             hunger = pet.hunger;
 
             string updatedJson = JsonUtility.ToJson(pet);
-            db.Child(user.UserId).Child("pets").Child(petName).SetRawJsonValueAsync(updatedJson).ContinueWithOnMainThread(updateTask =>
+            db.Child("users").Child(user.UserId).Child("pets").Child(petName).SetRawJsonValueAsync(updatedJson).ContinueWithOnMainThread(updateTask =>
             {
                 if (updateTask.IsFaulted || updateTask.IsCanceled)
                 {
@@ -220,7 +221,7 @@ public class PetDataHandler : MonoBehaviour
         }
         petName = this.petName;
 
-        db.Child(user.UserId).Child("pets").Child(petName).GetValueAsync().ContinueWithOnMainThread(task =>
+        db.Child("users").Child(user.UserId).Child("pets").Child(petName).GetValueAsync().ContinueWithOnMainThread(task =>
         {
             if (task.IsFaulted || task.IsCanceled)
             {
@@ -236,7 +237,7 @@ public class PetDataHandler : MonoBehaviour
             happiness = pet.happiness;
 
             string updatedJson = JsonUtility.ToJson(pet);
-            db.Child(user.UserId).Child("pets").Child(petName).SetRawJsonValueAsync(updatedJson).ContinueWithOnMainThread(updateTask =>
+            db.Child("users").Child(user.UserId).Child("pets").Child(petName).SetRawJsonValueAsync(updatedJson).ContinueWithOnMainThread(updateTask =>
             {
                 if (updateTask.IsFaulted || updateTask.IsCanceled)
                 {
@@ -265,7 +266,7 @@ public class PetDataHandler : MonoBehaviour
         }
 
         // get current pet data from database and display on UI
-        var petDataTask = db.Child(user.UserId).Child("pets").GetValueAsync();
+        var petDataTask = db.Child("users").Child(user.UserId).Child("pets").GetValueAsync();
         petDataTask.ContinueWithOnMainThread(task =>
         {
             if (task.IsFaulted || task.IsCanceled)
@@ -310,7 +311,7 @@ public class PetDataHandler : MonoBehaviour
         }
         petName = this.petName;
 
-        db.Child(user.UserId).Child("pets").Child(petName).GetValueAsync().ContinueWithOnMainThread(task =>
+        db.Child("users").Child(user.UserId).Child("pets").Child(petName).GetValueAsync().ContinueWithOnMainThread(task =>
         {
             if (task.IsFaulted || task.IsCanceled)
             {
@@ -368,7 +369,7 @@ public class PetDataHandler : MonoBehaviour
         string oldName = petName;
         newName = renameInputField.text;
 
-        db.Child(user.UserId).Child("pets").Child(oldName).GetValueAsync().ContinueWithOnMainThread(task =>
+        db.Child("users").Child(user.UserId).Child("pets").Child(oldName).GetValueAsync().ContinueWithOnMainThread(task =>
         {
             if (task.IsFaulted || task.IsCanceled)
             {
@@ -391,7 +392,7 @@ public class PetDataHandler : MonoBehaviour
                 else
                 {
                     // Optionally delete old pet entry
-                    db.Child(user.UserId).Child("pets").Child(oldName).RemoveValueAsync();
+                    db.Child("users").Child(user.UserId).Child("pets").Child(oldName).RemoveValueAsync();
                     petNameText.text = "Pet Name: " + newName;
                     petName = newName;
                 }
@@ -403,6 +404,7 @@ public class PetDataHandler : MonoBehaviour
     void Start()
     {
         LoadPetData();
+        accountManager = FindObjectOfType<AccountManager>();
     }
 
     // Decrease hunger and happiness on a reliable time interval (For testing, every 5 seconds)
@@ -415,6 +417,11 @@ public class PetDataHandler : MonoBehaviour
             if (user != null)
             {
                 LoadPetData();
+                if (accountManager.newUser)
+                {
+                    LoadPetData();
+                    accountManager.newUser = false;
+                }
                 isPetDataLoaded = true;
             }
         } else if (FirebaseAuth.DefaultInstance.CurrentUser == null)
