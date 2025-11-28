@@ -3179,8 +3179,8 @@ GameObject:
   - component: {fileID: 4447636175231293874}
   - component: {fileID: 49395758340684188}
   - component: {fileID: 4715004760093754703}
-  - component: {fileID: 7212318650547931870}
   - component: {fileID: 2156142417609533481}
+  - component: {fileID: 6473202735645991886}
   m_Layer: 0
   m_Name: octopus sample
   m_TagString: Untagged
@@ -3211,7 +3211,7 @@ MeshFilter:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 6793287220591966247}
-  m_Mesh: {fileID: 10208, guid: 0000000000000000e000000000000000, type: 0}
+  m_Mesh: {fileID: 10207, guid: 0000000000000000e000000000000000, type: 0}
 --- !u!23 &4715004760093754703
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -3257,29 +3257,6 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!136 &7212318650547931870
-CapsuleCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6793287220591966247}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_IsTrigger: 0
-  m_ProvidesContacts: 0
-  m_Enabled: 1
-  serializedVersion: 2
-  m_Radius: 0.5
-  m_Height: 2
-  m_Direction: 1
-  m_Center: {x: 0, y: 0, z: 0}
 --- !u!114 &2156142417609533481
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3301,6 +3278,27 @@ MonoBehaviour:
   petDataObject: {fileID: 6793287220591966247}
   renameInputField: {fileID: 2883539152174970410}
   petNames: {fileID: 3942333340997241930}
+--- !u!135 &6473202735645991886
+SphereCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6793287220591966247}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Radius: 0.5
+  m_Center: {x: 0, y: 0, z: 0}
 --- !u!1 &7243861138766362203
 GameObject:
   m_ObjectHideFlags: 0
