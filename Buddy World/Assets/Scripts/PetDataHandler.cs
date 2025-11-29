@@ -1,7 +1,7 @@
 /*
     Author: Yeong Yu Seong
     Date Created: 12 November 2025
-    Date Modified: 23 November 2025
+    Date Modified: 28 November 2025
     Description: Script to handle pet data operations such as loading, updating hunger/happiness, leveling up, and renaming.
     Info: This script is written with the help of the fix code function.
     Note to reviewers: Write cooldown logic so that feeding and playing cannot be spammed.
@@ -61,7 +61,6 @@ public class PetDataHandler : MonoBehaviour
     [SerializeField]
     private TMP_Text petNames; // Text element to display pet name in rename section
     private string newPetName; // New pet name for renaming
-    AccountManager accountManager;
     
     /// <summary>
     /// Decrease hunger when time passes
@@ -383,7 +382,7 @@ public class PetDataHandler : MonoBehaviour
 
             pet.petName = newName; // Update pet name
             string updatedJson = JsonUtility.ToJson(pet);
-            db.Child(user.UserId).Child("pets").Child(newName).SetRawJsonValueAsync(updatedJson).ContinueWithOnMainThread(updateTask =>
+            db.Child("users").Child(user.UserId).Child("pets").Child(newName).SetRawJsonValueAsync(updatedJson).ContinueWithOnMainThread(updateTask =>
             {
                 if (updateTask.IsFaulted || updateTask.IsCanceled)
                 {
@@ -404,7 +403,6 @@ public class PetDataHandler : MonoBehaviour
     void Start()
     {
         LoadPetData();
-        accountManager = FindObjectOfType<AccountManager>();
     }
 
     // Decrease hunger and happiness on a reliable time interval (For testing, every 5 seconds)
@@ -417,11 +415,6 @@ public class PetDataHandler : MonoBehaviour
             if (user != null)
             {
                 LoadPetData();
-                if (accountManager.newUser)
-                {
-                    LoadPetData();
-                    accountManager.newUser = false;
-                }
                 isPetDataLoaded = true;
             }
         } else if (FirebaseAuth.DefaultInstance.CurrentUser == null)

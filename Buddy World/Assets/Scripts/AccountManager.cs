@@ -1,6 +1,6 @@
 /* Author: Yeong Yu Seong
    Date: 11 November 2025
-   Last Modified: 23 November 2025
+   Last Modified: 28 November 2025
    Description: Account manager script to handle user sign-up, sign-in, and sign-out.
    Info: This script is written with the help of the fix code function.
 */
@@ -43,7 +43,6 @@ public class AccountManager : MonoBehaviour
     /// Reference to the Firebase Realtime Database.
     /// </summary>
     private DatabaseReference db;
-    public bool newUser = false;
     
     /// <summary>
     /// Creates a new user account with the provided email and password.
@@ -106,7 +105,6 @@ public class AccountManager : MonoBehaviour
                 var uid = task.Result.User.UserId;
                 db.Child("users").Child(uid).Child("email").SetValueAsync(EmailInput.text);
                 Debug.Log($"Created user UID: {uid}");
-                newUser = true;
             }
         });
     }
@@ -163,7 +161,7 @@ public class AccountManager : MonoBehaviour
             Debug.Log($"Signed in successfully: {task.Result.User.UserId}");
             howToPlayImage.gameObject.SetActive(true);
             //retrieve pet data
-            var retrieveTask = db.Child(FirebaseAuth.DefaultInstance.CurrentUser.UserId).Child("pets").GetValueAsync();
+            var retrieveTask = db.Child("users").Child(FirebaseAuth.DefaultInstance.CurrentUser.UserId).Child("pets").GetValueAsync();
             retrieveTask.ContinueWithOnMainThread(task =>
             {
                 if (task.IsFaulted || task.IsCanceled)
@@ -199,7 +197,7 @@ public class AccountManager : MonoBehaviour
                         string jsonDog = JsonUtility.ToJson(dog);
                         string jsonOctopus = JsonUtility.ToJson(octopus);
                         // Save the default pet to the database
-                        db.Child(FirebaseAuth.DefaultInstance.CurrentUser.UserId).Child("pets").Child("Dog")
+                        db.Child("users").Child(FirebaseAuth.DefaultInstance.CurrentUser.UserId).Child("pets").Child("Dog")
                           .SetRawJsonValueAsync(jsonDog)
                           .ContinueWithOnMainThread(t =>
                           {
@@ -208,7 +206,7 @@ public class AccountManager : MonoBehaviour
                               else
                                   Debug.Log("Dog added to database.");
                           });
-                        db.Child(FirebaseAuth.DefaultInstance.CurrentUser.UserId).Child("pets").Child("Octopus")
+                        db.Child("users").Child(FirebaseAuth.DefaultInstance.CurrentUser.UserId).Child("pets").Child("Octopus")
                           .SetRawJsonValueAsync(jsonOctopus)
                           .ContinueWithOnMainThread(t =>
                           {
