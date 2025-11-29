@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "595043717551",
+    "firebase_url": "https://buddy-world-default-rtdb.asia-southeast1.firebasedatabase.app",
+    "project_id": "buddy-world",
+    "storage_bucket": "buddy-world.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:595043717551:android:cf5fe380c400e8ad89df5a",
+        "android_client_info": {
+          "package_name": "com.buddyworld"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCsLqFlUavczgFWVj55F92tg_teaREO4TY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
