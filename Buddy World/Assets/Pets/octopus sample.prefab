@@ -3688,6 +3688,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c652a16afb39fc24489ca7ef32c93288, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  prefabType: Octopus
   petNameText: {fileID: 5664801582116555725}
   ownerIDText: {fileID: 1628035338893913240}
   petLevelText: {fileID: 1637338442270618922}
@@ -3697,6 +3698,8 @@ MonoBehaviour:
   petDataObject: {fileID: 6793287220591966247}
   renameInputField: {fileID: 5251103090683388900}
   petNames: {fileID: 4139172941072598865}
+  dogBone: {fileID: 0}
+  dog: {fileID: 0}
 --- !u!135 &6473202735645991886
 SphereCollider:
   m_ObjectHideFlags: 0

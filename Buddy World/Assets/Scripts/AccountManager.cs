@@ -1,6 +1,6 @@
 /* Author: Yeong Yu Seong
    Date: 11 November 2025
-   Last Modified: 28 November 2025
+   Last Modified: 2 December 2025
    Description: Account manager script to handle user sign-up, sign-in, and sign-out.
    Info: This script is written with the help of the fix code function.
 */
@@ -191,8 +191,8 @@ public class AccountManager : MonoBehaviour
                                   Debug.Log("PetName added to database.");
                           });
                         */
-                        var dog = new Pet("Dog", FirebaseAuth.DefaultInstance.CurrentUser.UserId, 1, 50, 50, System.DateTime.Now.ToString());
-                        var octopus = new Pet("Octopus", FirebaseAuth.DefaultInstance.CurrentUser.UserId, 1, 50, 50, System.DateTime.Now.ToString());
+                        var dog = new Pet("Dog", FirebaseAuth.DefaultInstance.CurrentUser.UserId, 1, 50, 50, System.DateTime.Now.ToString(), "Dog");
+                        var octopus = new Pet("Octopus", FirebaseAuth.DefaultInstance.CurrentUser.UserId, 1, 50, 50, System.DateTime.Now.ToString(), "Octopus");
                         
                         string jsonDog = JsonUtility.ToJson(dog);
                         string jsonOctopus = JsonUtility.ToJson(octopus);

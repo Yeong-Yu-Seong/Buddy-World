@@ -2981,6 +2981,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c652a16afb39fc24489ca7ef32c93288, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  prefabType: Dog
   petNameText: {fileID: 4207134820991046601}
   ownerIDText: {fileID: 6216602990866472260}
   petLevelText: {fileID: 7686916648934286545}

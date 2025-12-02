@@ -17,6 +17,8 @@ using System.Collections;
 
 public class PetDataHandler : MonoBehaviour
 {
+    [SerializeField]
+    private string prefabType; // Type of the pet prefab (e.g., "Dog", "Cat")
     /// <summary>
     /// UI Elements to display pet data
     /// </summary>
@@ -314,6 +316,10 @@ public class PetDataHandler : MonoBehaviour
             {
                 string json = petSnapshot.GetRawJsonValue();
                 Pet pet = JsonUtility.FromJson<Pet>(json);
+                if (pet.prefabType != prefabType)
+                {
+                    continue; // Skip pets that don't match the prefab type
+                }
                 // Get correct pet data from all the pets under this user
                 petName = pet.petName;
                 petNameText.text = "Pet Name: " + pet.petName;
@@ -446,7 +452,6 @@ public class PetDataHandler : MonoBehaviour
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
-        LoadPetData();
         dogBone.SetActive(false);
         dogAnimator = dog.GetComponent<Animator>();
     }

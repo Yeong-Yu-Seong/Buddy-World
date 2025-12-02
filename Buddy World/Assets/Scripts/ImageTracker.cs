@@ -1,3 +1,4 @@
+// Modified Date: 2 December 2025
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.XR.ARFoundation;
@@ -30,6 +31,11 @@ public class ImageTracker : MonoBehaviour
             GameObject newPrefab = Instantiate(prefab, Vector3.zero, Quaternion.identity);
             newPrefab.name = prefab.name;
             newPrefab.SetActive(false);
+            var petScript = newPrefab.GetComponent<PetDataHandler>();
+            if (petScript != null)
+            {
+                petScript.enabled = false;
+            }
             spawnedPrefabs.Add(prefab.name, newPrefab);
         }
     }
@@ -61,9 +67,20 @@ public class ImageTracker : MonoBehaviour
                 //Disable the associated content
                 spawnedPrefabs[trackedImage.referenceImage.name].transform.SetParent(null);
                 spawnedPrefabs[trackedImage.referenceImage.name].SetActive(false);
+                var petScript = spawnedPrefabs[trackedImage.referenceImage.name].GetComponent<PetDataHandler>();
+                if (petScript != null && petScript.enabled)
+                {
+                    petScript.enabled = false;
+                }
             }
             else if (trackedImage.trackingState == TrackingState.Tracking)
             {
+                var petScript = spawnedPrefabs[trackedImage.referenceImage.name].GetComponent<PetDataHandler>();
+                if (petScript != null && !petScript.enabled)
+                {
+                    petScript.enabled = true;
+                    petScript.LoadPetData();
+                }
                 Debug.Log(trackedImage.gameObject.name + " is being tracked.");
                 //Enable the associated content
                 if(spawnedPrefabs[trackedImage.referenceImage.name].transform.parent != trackedImage.transform)

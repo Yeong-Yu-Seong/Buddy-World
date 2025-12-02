@@ -1,6 +1,6 @@
 /* Author: Yeong Yu Seong
    Date: 11 November 2025
-   Last Modified: 12 November 2025
+   Last Modified: 2 December 2025
    Description: Database manager script to handle pet data structure.
 */
 using UnityEngine;
@@ -36,11 +36,12 @@ public class Pet
     public int hunger;
     public int happiness;
     public string lastFed;
+    public string prefabType;
 
     // Parameterless constructor required/safer for JsonUtility deserialization
     public Pet() { }
 
-    public Pet(string petName, string ownerID, int level, int hunger, int happiness, string lastFed)
+    public Pet(string petName, string ownerID, int level, int hunger, int happiness, string lastFed, string prefabType)
     {
         this.petName = petName;
         this.ownerID = ownerID;
@@ -48,5 +49,6 @@ public class Pet
         this.hunger = hunger;
         this.happiness = happiness;
         this.lastFed = lastFed;
+        this.prefabType = prefabType;
     }
 }
