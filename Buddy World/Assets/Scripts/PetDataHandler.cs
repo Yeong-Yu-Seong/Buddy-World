@@ -1,7 +1,7 @@
 /*
     Author: Yeong Yu Seong
     Date Created: 12 November 2025
-    Date Modified: 28 November 2025
+    Date Modified: 2 December 2025
     Description: Script to handle pet data operations such as loading, updating hunger/happiness, leveling up, and renaming.
     Info: This script is written with the help of the fix code function.
     Note to reviewers: Write cooldown logic so that feeding and playing cannot be spammed.
@@ -61,7 +61,15 @@ public class PetDataHandler : MonoBehaviour
     [SerializeField]
     private TMP_Text petNames; // Text element to display pet name in rename section
     private string newPetName; // New pet name for renaming
-    
+    /// <summary>
+    /// GameObjects for dog eating animation
+    /// </summary>
+    [SerializeField]
+    private GameObject dogBone; // Dog bone object to show when eating
+    [SerializeField]
+    private GameObject dog; // Dog object to animate when eating
+    private Animator dogAnimator; // Animator component for the dog
+    private bool isCooldownActive = false; // Flag to track if cooldown is active
     /// <summary>
     /// Decrease hunger when time passes
     /// </summary>
@@ -114,6 +122,12 @@ public class PetDataHandler : MonoBehaviour
     /// <param name="petName"></param>
     public void IncreaseHunger(string petName)
     {
+        if (isCooldownActive)
+            {
+                Debug.Log("Actions are on cooldown. Please wait before performing another action.");
+            return;
+        }
+        isCooldownActive = true;
         var db = FirebaseDatabase.DefaultInstance.RootReference;
         var user = Firebase.Auth.FirebaseAuth.DefaultInstance.CurrentUser;
         if (user == null)
@@ -140,6 +154,11 @@ public class PetDataHandler : MonoBehaviour
             petHungerText.text = "Hunger: " + pet.hunger.ToString();
             lastFedText.text = "Last Fed: " + pet.lastFed;
             hunger = pet.hunger;
+            dogBone.SetActive(true);
+            dogAnimator.SetTrigger("eatTrigger");
+            isCooldownActive = true;
+            StartCoroutine(CooldownCoroutine(5f)); // Set cooldown duration here (e.g., 5 seconds)
+            StartCoroutine(StopEatingAnimationAfterDelay(3f)); // Stop eating animation after 3 seconds
 
             string updatedJson = JsonUtility.ToJson(pet);
             db.Child("users").Child(user.UserId).Child("pets").Child(petName).SetRawJsonValueAsync(updatedJson).ContinueWithOnMainThread(updateTask =>
@@ -156,7 +175,16 @@ public class PetDataHandler : MonoBehaviour
             });
         });
     }
-
+    /// <summary>
+    /// Stop eating animation after delay
+    /// </summary>
+    /// <param name="delay"></param>
+    /// <returns></returns>
+    private IEnumerator StopEatingAnimationAfterDelay(float delay)
+    {
+        yield return new WaitForSeconds(delay);
+        dogBone.SetActive(false);
+    }
     /// <summary>
     /// Decrease happiness and hunger when hunger is low
     /// </summary>
@@ -211,6 +239,12 @@ public class PetDataHandler : MonoBehaviour
     /// <param name="petName"></param>
     public void IncreaseHappiness(string petName)
     {
+        if (isCooldownActive)
+        {
+            Debug.Log("Actions are on cooldown. Please wait before performing another action.");
+            return;
+        }
+        isCooldownActive = true;
         var db = FirebaseDatabase.DefaultInstance.RootReference;
         var user = Firebase.Auth.FirebaseAuth.DefaultInstance.CurrentUser;
         if (user == null)
@@ -234,6 +268,7 @@ public class PetDataHandler : MonoBehaviour
 
             pet.happiness = Mathf.Min(100, pet.happiness + 10); // Increase happiness but not above 100
             happiness = pet.happiness;
+            StartCoroutine(CooldownCoroutine(5f)); // Set cooldown duration here (e.g., 5 seconds)
 
             string updatedJson = JsonUtility.ToJson(pet);
             db.Child("users").Child(user.UserId).Child("pets").Child(petName).SetRawJsonValueAsync(updatedJson).ContinueWithOnMainThread(updateTask =>
@@ -398,11 +433,22 @@ public class PetDataHandler : MonoBehaviour
             });
         });
     }
-
+    /// <summary>
+    /// Cooldown coroutine to reset cooldown flag after specified time
+    /// </summary>
+    /// <param name="cooldownTime">Duration of the cooldown in seconds</param>
+    /// <returns></returns>
+    IEnumerator CooldownCoroutine(float cooldownTime)
+    {
+        yield return new WaitForSeconds(cooldownTime);
+        isCooldownActive = false;
+    }
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
         LoadPetData();
+        dogBone.SetActive(false);
+        dogAnimator = dog.GetComponent<Animator>();
     }
 
     // Decrease hunger and happiness on a reliable time interval (For testing, every 5 seconds)
