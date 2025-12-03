@@ -1,7 +1,7 @@
 /*
     Author: Yeong Yu Seong
     Date Created: 12 November 2025
-    Date Modified: 2 December 2025
+    Date Modified: 3 December 2025
     Description: Script to handle pet data operations such as loading, updating hunger/happiness, leveling up, and renaming.
     Info: This script is written with the help of the fix code function.
     Note to reviewers: Write cooldown logic so that feeding and playing cannot be spammed.
@@ -97,7 +97,7 @@ public class PetDataHandler : MonoBehaviour
             return;
         }
 
-        db.Child("users").Child(user.UserId).Child("pets").Child(petName).GetValueAsync().ContinueWithOnMainThread(task =>
+        db.Child("users").Child(user.UserId).Child("pets").Child(prefabType).GetValueAsync().ContinueWithOnMainThread(task =>
         {
             if (task.IsFaulted || task.IsCanceled)
             {
@@ -114,7 +114,7 @@ public class PetDataHandler : MonoBehaviour
             hunger = pet.hunger;
 
             string updatedJson = JsonUtility.ToJson(pet);
-            db.Child("users").Child(user.UserId).Child("pets").Child(petName).SetRawJsonValueAsync(updatedJson).ContinueWithOnMainThread(updateTask =>
+            db.Child("users").Child(user.UserId).Child("pets").Child(prefabType).SetRawJsonValueAsync(updatedJson).ContinueWithOnMainThread(updateTask =>
             {
                 if (updateTask.IsFaulted || updateTask.IsCanceled)
                 {
@@ -151,7 +151,7 @@ public class PetDataHandler : MonoBehaviour
         }
         petName = this.petName;
 
-        db.Child("users").Child(user.UserId).Child("pets").Child(petName).GetValueAsync().ContinueWithOnMainThread(task =>
+        db.Child("users").Child(user.UserId).Child("pets").Child(prefabType).GetValueAsync().ContinueWithOnMainThread(task =>
         {
             if (task.IsFaulted || task.IsCanceled)
             {
@@ -170,7 +170,7 @@ public class PetDataHandler : MonoBehaviour
             hunger = pet.hunger;
 
             string updatedJson = JsonUtility.ToJson(pet);
-            db.Child("users").Child(user.UserId).Child("pets").Child(petName).SetRawJsonValueAsync(updatedJson).ContinueWithOnMainThread(updateTask =>
+            db.Child("users").Child(user.UserId).Child("pets").Child(prefabType).SetRawJsonValueAsync(updatedJson).ContinueWithOnMainThread(updateTask =>
             {
                 if (updateTask.IsFaulted || updateTask.IsCanceled)
                 {
@@ -206,7 +206,7 @@ public class PetDataHandler : MonoBehaviour
             return;
         }
 
-        db.Child("users").Child(user.UserId).Child("pets").Child(petName).GetValueAsync().ContinueWithOnMainThread(task =>
+        db.Child("users").Child(user.UserId).Child("pets").Child(prefabType).GetValueAsync().ContinueWithOnMainThread(task =>
         {
             if (task.IsFaulted || task.IsCanceled)
             {
@@ -224,7 +224,7 @@ public class PetDataHandler : MonoBehaviour
             hunger = pet.hunger;
 
             string updatedJson = JsonUtility.ToJson(pet);
-            db.Child("users").Child(user.UserId).Child("pets").Child(petName).SetRawJsonValueAsync(updatedJson).ContinueWithOnMainThread(updateTask =>
+            db.Child("users").Child(user.UserId).Child("pets").Child(prefabType).SetRawJsonValueAsync(updatedJson).ContinueWithOnMainThread(updateTask =>
             {
                 if (updateTask.IsFaulted || updateTask.IsCanceled)
                 {
@@ -260,7 +260,7 @@ public class PetDataHandler : MonoBehaviour
         }
         petName = this.petName;
 
-        db.Child("users").Child(user.UserId).Child("pets").Child(petName).GetValueAsync().ContinueWithOnMainThread(task =>
+        db.Child("users").Child(user.UserId).Child("pets").Child(prefabType).GetValueAsync().ContinueWithOnMainThread(task =>
         {
             if (task.IsFaulted || task.IsCanceled)
             {
@@ -276,7 +276,7 @@ public class PetDataHandler : MonoBehaviour
             happiness = pet.happiness;
 
             string updatedJson = JsonUtility.ToJson(pet);
-            db.Child("users").Child(user.UserId).Child("pets").Child(petName).SetRawJsonValueAsync(updatedJson).ContinueWithOnMainThread(updateTask =>
+            db.Child("users").Child(user.UserId).Child("pets").Child(prefabType).SetRawJsonValueAsync(updatedJson).ContinueWithOnMainThread(updateTask =>
             {
                 if (updateTask.IsFaulted || updateTask.IsCanceled)
                 {
@@ -365,7 +365,7 @@ public class PetDataHandler : MonoBehaviour
         }
         petName = this.petName;
 
-        db.Child("users").Child(user.UserId).Child("pets").Child(petName).GetValueAsync().ContinueWithOnMainThread(task =>
+        db.Child("users").Child(user.UserId).Child("pets").Child(prefabType).GetValueAsync().ContinueWithOnMainThread(task =>
         {
             if (task.IsFaulted || task.IsCanceled)
             {
@@ -384,7 +384,7 @@ public class PetDataHandler : MonoBehaviour
             pet.hunger = hunger;
             pet.happiness = happiness;
             string updatedJson = JsonUtility.ToJson(pet);
-            db.Child(user.UserId).Child("pets").Child(petName).SetRawJsonValueAsync(updatedJson).ContinueWithOnMainThread(updateTask =>
+            db.Child("users").Child(user.UserId).Child("pets").Child(prefabType).SetRawJsonValueAsync(updatedJson).ContinueWithOnMainThread(updateTask =>
             {
                 if (updateTask.IsFaulted || updateTask.IsCanceled)
                 {
@@ -421,10 +421,11 @@ public class PetDataHandler : MonoBehaviour
             Debug.LogWarning("No signed-in user; cannot rename pet.");
             return;
         }
-        string oldName = petName;
+
         newName = renameInputField.text;
 
-        db.Child("users").Child(user.UserId).Child("pets").Child(oldName).GetValueAsync().ContinueWithOnMainThread(task =>
+        db.Child("users").Child(user.UserId).Child("pets").Child(prefabType).GetValueAsync()
+        .ContinueWithOnMainThread(task =>
         {
             if (task.IsFaulted || task.IsCanceled)
             {
@@ -437,8 +438,11 @@ public class PetDataHandler : MonoBehaviour
             Pet pet = JsonUtility.FromJson<Pet>(json);
 
             pet.petName = newName; // Update pet name
+
             string updatedJson = JsonUtility.ToJson(pet);
-            db.Child("users").Child(user.UserId).Child("pets").Child(newName).SetRawJsonValueAsync(updatedJson).ContinueWithOnMainThread(updateTask =>
+            db.Child("users").Child(user.UserId).Child("pets").Child(prefabType)
+            .SetRawJsonValueAsync(updatedJson)
+            .ContinueWithOnMainThread(updateTask =>
             {
                 if (updateTask.IsFaulted || updateTask.IsCanceled)
                 {
@@ -446,8 +450,6 @@ public class PetDataHandler : MonoBehaviour
                 }
                 else
                 {
-                    // Optionally delete old pet entry
-                    db.Child("users").Child(user.UserId).Child("pets").Child(oldName).RemoveValueAsync();
                     petNameText.text = "Pet Name: " + newName;
                     petName = newName;
                     statChangeMsg.text = "Pet renamed to " + newName;
@@ -455,6 +457,7 @@ public class PetDataHandler : MonoBehaviour
             });
         });
     }
+
     /// <summary>
     /// Cooldown coroutine to reset cooldown flag after specified time
     /// </summary>
