@@ -1422,7 +1422,7 @@ MonoBehaviour:
   m_fontColor32:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontColor: {r: 0.34117648, g: 0.20392157, b: 0.20784314, a: 1}
+  m_fontColor: {r: 0.8509804, g: 0.5176471, b: 0.5176471, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
   m_fontColorGradient:
@@ -1817,7 +1817,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   trackedImageManager: {fileID: 331264289}
   placeablePrefabs:
-  - {fileID: 6793287220591966247, guid: 4066ce6081909064190ca4f30af7d3cc, type: 3}
+  - {fileID: 6793287220591966247, guid: afaabe80a56459b4687ea604d0393e93, type: 3}
   - {fileID: 6793287220591966247, guid: e13269ac11e86d24694199bda5e911d3, type: 3}
 --- !u!114 &331264289
 MonoBehaviour:

@@ -1,10 +1,9 @@
 /*
     Author: Yeong Yu Seong
     Date Created: 12 November 2025
-    Date Modified: 3 December 2025
+    Date Modified: 7 December 2025
     Description: Script to handle pet data operations such as loading, updating hunger/happiness, leveling up, and renaming.
     Info: This script is written with the help of the fix code function.
-    Note to reviewers: Write cooldown logic so that feeding and playing cannot be spammed.
 */
 using UnityEngine;
 using UnityEngine.UI;
@@ -50,7 +49,7 @@ public class PetDataHandler : MonoBehaviour
     /// Timer to run hunger/happiness updates on a time interval instead of frame count
     /// </summary>
     private float hungerTimer = 0f; // Timer to track hunger updates
-    private const float hungerInterval = 5f; // seconds (for testing, adjust as needed)
+    private const float hungerInterval = 60f; // Interval in seconds to decrease hunger/happiness
     /// <summary>
     /// Flag to track if pet data has been loaded
     /// </summary>
@@ -186,7 +185,7 @@ public class PetDataHandler : MonoBehaviour
                     isCooldownActive = true;
                     petNormalSound.Stop();
                     petEatSound.Play(); // Play eating sound effect
-                    StartCoroutine(CooldownCoroutine(5f)); // Set cooldown duration here (e.g., 5 seconds)
+                    StartCoroutine(CooldownCoroutine(30f)); // Set cooldown duration here (e.g., 30 seconds)
                 }
             });
         });
@@ -291,7 +290,7 @@ public class PetDataHandler : MonoBehaviour
                     petNormalSound.Stop();
                     petHappySound.Play(); // Play happy sound effect
                     petAnimator.SetTrigger("playTrigger");
-                    StartCoroutine(CooldownCoroutine(5f)); // Set cooldown duration here (e.g., 5 seconds)
+                    StartCoroutine(CooldownCoroutine(30f)); // Set cooldown duration here (e.g., 30 seconds)
                 }
             });
         });
@@ -520,12 +519,12 @@ public class PetDataHandler : MonoBehaviour
                 // No active pet selected yet.
                 return;
             }
-            // Decrease hunger every interval (For testing, decrease every 5 seconds)
+            // Decrease hunger every interval
             if (hunger > 95)
             {
                 DecreaseHunger(petName, 1);
             }
-            // Decrease happiness and hunger every interval if hunger is below a certain threshold (For testing, decrease every 5 seconds)
+            // Decrease happiness and hunger every interval if hunger is below a certain threshold
             if (hunger <= 95 && hunger > 0)
             {
                 DecreaseHappinessAndHunger(petName, 1);

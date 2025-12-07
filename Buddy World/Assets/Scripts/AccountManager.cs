@@ -1,6 +1,6 @@
 /* Author: Yeong Yu Seong
    Date: 11 November 2025
-   Last Modified: 3 December 2025
+   Last Modified: 7 December 2025
    Description: Account manager script to handle user sign-up, sign-in, and sign-out.
    Info: This script is written with the help of the fix code function.
 */
@@ -192,10 +192,10 @@ public class AccountManager : MonoBehaviour
                           });
                         */
                         var dog = new Pet("Dog", FirebaseAuth.DefaultInstance.CurrentUser.UserId, 1, 50, 50, System.DateTime.Now.ToString(), "Dog");
-                        var octopus = new Pet("Octopus", FirebaseAuth.DefaultInstance.CurrentUser.UserId, 1, 50, 50, System.DateTime.Now.ToString(), "Octopus");
+                        var fish = new Pet("Fish", FirebaseAuth.DefaultInstance.CurrentUser.UserId, 1, 50, 50, System.DateTime.Now.ToString(), "Fish");
                         
                         string jsonDog = JsonUtility.ToJson(dog);
-                        string jsonOctopus = JsonUtility.ToJson(octopus);
+                        string jsonFish = JsonUtility.ToJson(fish);
                         // Save the default pet to the database
                         db.Child("users").Child(FirebaseAuth.DefaultInstance.CurrentUser.UserId).Child("pets").Child("Dog")
                           .SetRawJsonValueAsync(jsonDog)
@@ -206,14 +206,14 @@ public class AccountManager : MonoBehaviour
                               else
                                   Debug.Log("Dog added to database.");
                           });
-                        db.Child("users").Child(FirebaseAuth.DefaultInstance.CurrentUser.UserId).Child("pets").Child("Octopus")
-                          .SetRawJsonValueAsync(jsonOctopus)
+                        db.Child("users").Child(FirebaseAuth.DefaultInstance.CurrentUser.UserId).Child("pets").Child("Fish")
+                          .SetRawJsonValueAsync(jsonFish)
                           .ContinueWithOnMainThread(t =>
                           {
                               if (t.IsFaulted || t.IsCanceled)
-                                  Debug.LogError("Failed to add Octopus: " + (t.Exception != null ? t.Exception.Message : "Task canceled"));
+                                  Debug.LogError("Failed to add Fish: " + (t.Exception != null ? t.Exception.Message : "Task canceled"));
                               else
-                                  Debug.Log("Octopus added to database.");
+                                  Debug.Log("Fish added to database.");
                           });
                     }
 
