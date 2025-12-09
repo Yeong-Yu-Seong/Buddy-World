@@ -1,6 +1,6 @@
 /* Author: Yeong Yu Seong
    Date: 11 November 2025
-   Last Modified: 7 December 2025
+   Last Modified: 8 December 2025
    Description: Account manager script to handle user sign-up, sign-in, and sign-out.
    Info: This script is written with the help of the fix code function.
 */
@@ -37,8 +37,6 @@ public class AccountManager : MonoBehaviour
     private Canvas gameplayCanvas;
     [SerializeField]
     private TMP_Text loadingText;
-    [SerializeField]
-    private Image howToPlayImage; // First page of how to play
     /// <summary>
     /// Reference to the Firebase Realtime Database.
     /// </summary>
@@ -159,7 +157,6 @@ public class AccountManager : MonoBehaviour
             }
 
             Debug.Log($"Signed in successfully: {task.Result.User.UserId}");
-            howToPlayImage.gameObject.SetActive(true);
             //retrieve pet data
             var retrieveTask = db.Child("users").Child(FirebaseAuth.DefaultInstance.CurrentUser.UserId).Child("pets").GetValueAsync();
             retrieveTask.ContinueWithOnMainThread(task =>
@@ -176,23 +173,8 @@ public class AccountManager : MonoBehaviour
                     if (!task.Result.Exists)
                     {
                         Debug.Log("No pets found for this user. Creating default pets.");
-                        // Create default pets
-                        /*
-                        Template for adding more pets in the future
-                        var petName = new Pet("PetName", FirebaseAuth.DefaultInstance.CurrentUser.UserId, 1, 50, 50, System.DateTime.Now.ToString(), "PetType");
-                        string jsonPetName = JsonUtility.ToJson(petName);
-                        db.Child(FirebaseAuth.DefaultInstance.CurrentUser.UserId).Child("pets").Child("PetName")
-                          .SetRawJsonValueAsync(jsonPetName)
-                          .ContinueWithOnMainThread(t =>
-                          {
-                              if (t.IsFaulted || t.IsCanceled)
-                                  Debug.LogError("Failed to add PetName: " + (t.Exception != null ? t.Exception.Message : "Task canceled"));
-                              else
-                                  Debug.Log("PetName added to database.");
-                          });
-                        */
-                        var dog = new Pet("Dog", FirebaseAuth.DefaultInstance.CurrentUser.UserId, 1, 50, 50, System.DateTime.Now.ToString(), "Dog");
-                        var fish = new Pet("Fish", FirebaseAuth.DefaultInstance.CurrentUser.UserId, 1, 50, 50, System.DateTime.Now.ToString(), "Fish");
+                        var dog = new Pet("Dog", FirebaseAuth.DefaultInstance.CurrentUser.UserId, 1, 50, 60, System.DateTime.Now.ToString(), "Dog");
+                        var fish = new Pet("Fish", FirebaseAuth.DefaultInstance.CurrentUser.UserId, 1, 50, 60, System.DateTime.Now.ToString(), "Fish");
                         
                         string jsonDog = JsonUtility.ToJson(dog);
                         string jsonFish = JsonUtility.ToJson(fish);
@@ -265,7 +247,6 @@ public class AccountManager : MonoBehaviour
         {
             Debug.LogWarning("SignOut threw an exception: " + ex.Message);
         }
-        howToPlayImage.enabled = true;
         StartCoroutine(ShowLoadingThenSignIn(1.5f));
     }
 
@@ -275,7 +256,6 @@ public class AccountManager : MonoBehaviour
         signInCanvas.enabled = true;
         loadingCanvas.enabled = false;
         gameplayCanvas.enabled = false;
-        howToPlayImage.enabled = false;
         db = FirebaseDatabase.DefaultInstance.RootReference;
     }
     IEnumerator CanvasTimer(float delay)
@@ -294,7 +274,6 @@ public class AccountManager : MonoBehaviour
         yield return new WaitForSeconds(delay);
         loadingCanvas.enabled = false;
         gameplayCanvas.enabled = true;
-        howToPlayImage.enabled = true;
     }
 
     /// <summary>

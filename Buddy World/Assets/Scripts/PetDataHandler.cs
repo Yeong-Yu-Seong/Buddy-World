@@ -1,9 +1,8 @@
 /*
     Author: Yeong Yu Seong
     Date Created: 12 November 2025
-    Date Modified: 7 December 2025
-    Description: Script to handle pet data operations such as loading, updating hunger/happiness, leveling up, and renaming.
-    Info: This script is written with the help of the fix code function.
+    Date Modified: 9 December 2025
+    Description: Handles pet data operations such as loading, updating, and displaying pet stats from Firebase Realtime Database.
 */
 using UnityEngine;
 using UnityEngine.UI;
@@ -76,11 +75,23 @@ public class PetDataHandler : MonoBehaviour
     [SerializeField]
     private TMP_Text statChangeMsg; // Text element to display stat change messages
     [SerializeField]
+    private TMP_Text cooldownMsg; // Text element to display cooldown messages
+    /// <summary>
+    /// Audio sources for pet sounds
+    /// </summary>
+    [SerializeField]
     private AudioSource petEatSound; // Sound effect for pet eating
     [SerializeField]
     private AudioSource petHappySound; // Sound effect for pet happy
     [SerializeField]
     private AudioSource petNormalSound; // Sound effect for pet normal state
+    private bool isPetting = false; // Flag to track if pet is being petted
+    [SerializeField]
+    private Button petButton; // Button element to display petting message
+    [SerializeField]
+    private GameObject infoPanel; // Info panel to show petting instructions
+    private DatabaseReference petRef; // Reference to the pet data in the database
+    private bool eventListenerAdded = false; // Flag to track if event listener has been added
 
     /// <summary>
     /// Decrease hunger when time passes
@@ -124,6 +135,7 @@ public class PetDataHandler : MonoBehaviour
                     // successfully updated hunger in DB; update UI already done above
                     petHungerText.text = "Hunger: " + pet.hunger.ToString();
                     statChangeMsg.text = "Hunger decreased! -" + amount;
+                    StartCoroutine(StartStatChangeMessageClear(5f));
                 }
             });
         });
@@ -137,10 +149,11 @@ public class PetDataHandler : MonoBehaviour
     {
         if (isCooldownActive)
             {
-                Debug.Log("Actions are on cooldown. Please wait before performing another action.");
+            cooldownMsg.text = "Actions on cooldown.";
+            StartCoroutine(StartCooldownMessageClear(5f));
             return;
         }
-        isCooldownActive = true;
+        cooldownMsg.text = "";
         var db = FirebaseDatabase.DefaultInstance.RootReference;
         var user = Firebase.Auth.FirebaseAuth.DefaultInstance.CurrentUser;
         if (user == null)
@@ -185,7 +198,8 @@ public class PetDataHandler : MonoBehaviour
                     isCooldownActive = true;
                     petNormalSound.Stop();
                     petEatSound.Play(); // Play eating sound effect
-                    StartCoroutine(CooldownCoroutine(30f)); // Set cooldown duration here (e.g., 30 seconds)
+                    StartCoroutine(CooldownCoroutine(25f)); // Set cooldown duration here (e.g., 30 seconds)
+                    StartCoroutine(StartStatChangeMessageClear(5f));
                 }
             });
         });
@@ -234,22 +248,65 @@ public class PetDataHandler : MonoBehaviour
                     petHappinessText.text = "Happiness: " + pet.happiness.ToString();
                     petHungerText.text = "Hunger: " + pet.hunger.ToString();
                     statChangeMsg.text = "Happiness and Hunger decreased! -" + amount;
+                    StartCoroutine(StartStatChangeMessageClear(5f));
                 }
             });
         });
     }
 
+    public void ActivatePetting()
+    {
+        isPetting = !isPetting;
+        if (petButton != null)
+        {
+            var tmpText = petButton.GetComponentInChildren<TMP_Text>();
+            if (!isPetting)
+            {
+                if (tmpText != null)
+                {
+                    tmpText.text = "Pet";
+                }
+
+                var img = petButton.GetComponent<Image>();
+                if (img != null)
+                {
+                    // Set a light cream color (hex #ECE4D8) for the button background
+                    img.color = new Color32(0xEC, 0xE4, 0xD8, 0xFF);
+                }
+                return;
+            } else
+            {
+                if (tmpText != null)
+                {
+                    tmpText.text = "Petting...";
+                }
+
+                var img = petButton.GetComponent<Image>();
+                if (img != null)
+                {
+                    // Set a light peach color (hex #FEEACC) for the button background
+                    img.color = new Color32(0xFE, 0xEA, 0xCC, 0xFF);
+                }
+            }
+        }
+    }
     /// <summary>
     /// Press play with pet to increase happiness
     /// </summary>
     /// <param name="petName"></param>
     public void IncreaseHappiness(string petName)
-    {
+    {   if (!isPetting)
+        {
+            return; // Skip if not petting
+        }
+        infoPanel.SetActive(false);
         if (isCooldownActive)
         {
-            Debug.Log("Actions are on cooldown. Please wait before performing another action.");
+            cooldownMsg.text = "Actions on cooldown.";
+            StartCoroutine(StartCooldownMessageClear(5f));
             return;
         }
+        cooldownMsg.text = "";
         var db = FirebaseDatabase.DefaultInstance.RootReference;
         var user = Firebase.Auth.FirebaseAuth.DefaultInstance.CurrentUser;
         if (user == null)
@@ -271,7 +328,7 @@ public class PetDataHandler : MonoBehaviour
             string json = snapshot.GetRawJsonValue();
             Pet pet = JsonUtility.FromJson<Pet>(json);
 
-            pet.happiness = Mathf.Min(100, pet.happiness + 10); // Increase happiness but not above 100
+            pet.happiness = Mathf.Min(100, pet.happiness + 8); // Increase happiness but not above 100
             happiness = pet.happiness;
 
             string updatedJson = JsonUtility.ToJson(pet);
@@ -284,13 +341,14 @@ public class PetDataHandler : MonoBehaviour
                 else
                 {
                     petHappinessText.text = "Happiness: " + pet.happiness.ToString();
-                    statChangeMsg.text = "Happiness increased! +10";
+                    statChangeMsg.text = "Happiness increased! +8";
                     loveParticles.Play(); // Play love particle effect
                     isCooldownActive = true;
                     petNormalSound.Stop();
                     petHappySound.Play(); // Play happy sound effect
                     petAnimator.SetTrigger("playTrigger");
-                    StartCoroutine(CooldownCoroutine(30f)); // Set cooldown duration here (e.g., 30 seconds)
+                    StartCoroutine(CooldownCoroutine(25f)); // Set cooldown duration here (e.g., 30 seconds)
+                    StartCoroutine(StartStatChangeMessageClear(5f));
                 }
             });
         });
@@ -348,10 +406,9 @@ public class PetDataHandler : MonoBehaviour
             }
         });
     }
-
     /// <summary>
     /// Increase pet level when happiness reaches 100
-    /// Reset hunger and happiness to 10 upon leveling up
+    /// Reset hunger and happiness after leveling up
     /// </summary>
     public void IncreaseLevel(string petName)
     {
@@ -378,8 +435,8 @@ public class PetDataHandler : MonoBehaviour
 
             pet.level += 1; // Increase level by 1
             level = pet.level;
-            hunger = 10;
-            happiness = 10;
+            hunger = 55;
+            happiness = 65;
             pet.hunger = hunger;
             pet.happiness = happiness;
             string updatedJson = JsonUtility.ToJson(pet);
@@ -395,6 +452,7 @@ public class PetDataHandler : MonoBehaviour
                     petHungerText.text = "Hunger: " + pet.hunger.ToString();
                     petHappinessText.text = "Happiness: " + pet.happiness.ToString();
                     statChangeMsg.text = "Level increased! +1";
+                    StartCoroutine(StartStatChangeMessageClear(5f));
                 }
             });
         });
@@ -464,8 +522,7 @@ public class PetDataHandler : MonoBehaviour
     /// <returns></returns>
     IEnumerator CooldownCoroutine(float cooldownTime)
     {
-        yield return new WaitForSeconds(cooldownTime);
-        isCooldownActive = false;
+        yield return new WaitForSeconds(5f); // Short delay to allow action effects to play
         if (loveParticles.isPlaying)
         {
             loveParticles.Stop();
@@ -476,14 +533,62 @@ public class PetDataHandler : MonoBehaviour
             petEatSound.Stop();
         }
         petNormalSound.Play(); // Resume normal sound effect after cooldown
+        yield return new WaitForSeconds(cooldownTime);
+        isCooldownActive = false;
+    }
+    /// <summary>
+    /// Clear cooldown message after delay
+    /// </summary>
+    /// <param name="delay"></param>
+    /// <returns></returns>
+    IEnumerator StartCooldownMessageClear(float delay)
+    {
+        yield return new WaitForSeconds(delay);
+        cooldownMsg.text = "";
+    }
+    /// <summary>
+    /// Clear stat change message after delay
+    /// </summary>
+    /// <param name="delay"></param>
+    /// <returns></returns>
+    IEnumerator StartStatChangeMessageClear(float delay)
+    {
+        yield return new WaitForSeconds(delay);
+        statChangeMsg.text = "";
+    }
+    public void OnPetDataChanged(object sender, ValueChangedEventArgs args)
+    {
+        if (args.DatabaseError != null)
+        {
+            Debug.LogError("Database error: " + args.DatabaseError.Message);
+            return;
+        }
+
+        if (args.Snapshot.Exists)
+        {
+            LoadPetData(); // Reload pet data from database
+            Debug.Log("Pet data updated from database.");
+        }
     }
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
         statChangeMsg.text = "";
+        cooldownMsg.text = "";
+        if (eventListenerAdded == false)
+        {
+            petRef = FirebaseDatabase.DefaultInstance.RootReference
+                .Child("users")
+                .Child(FirebaseAuth.DefaultInstance.CurrentUser.UserId)
+                .Child("pets")
+                .Child(prefabType);
+
+            petRef.ValueChanged += OnPetDataChanged;
+            eventListenerAdded = true;
+        }
     }
 
-    // Decrease hunger and happiness on a reliable time interval (For testing, every 5 seconds)
+    // Decrease hunger and happiness on a reliable time interval
     // Guard against calling Firebase code when the user is not signed in or petName is not set.
     void Update()
     {
@@ -522,16 +627,16 @@ public class PetDataHandler : MonoBehaviour
             // Decrease hunger every interval
             if (hunger > 95)
             {
-                DecreaseHunger(petName, 1);
+                DecreaseHunger(petName, 2);
             }
             // Decrease happiness and hunger every interval if hunger is below a certain threshold
-            if (hunger <= 95 && hunger > 0)
+            if (hunger <= 60 && hunger > 0)
             {
-                DecreaseHappinessAndHunger(petName, 1);
+                DecreaseHappinessAndHunger(petName, 3);
             }
             else if (hunger == 0)
             {
-                DecreaseHappinessAndHunger(petName, 1);
+                DecreaseHappinessAndHunger(petName, 3);
             }
             // Increase level if happiness reaches 100
             if (happiness == 100)
