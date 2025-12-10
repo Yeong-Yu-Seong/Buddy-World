@@ -1,7 +1,7 @@
 /*
     Author: Yeong Yu Seong
     Date Created: 12 November 2025
-    Date Modified: 9 December 2025
+    Date Modified: 10 December 2025
     Description: Handles pet data operations such as loading, updating, and displaying pet stats from Firebase Realtime Database.
 */
 using UnityEngine;
@@ -91,7 +91,6 @@ public class PetDataHandler : MonoBehaviour
     [SerializeField]
     private GameObject infoPanel; // Info panel to show petting instructions
     private DatabaseReference petRef; // Reference to the pet data in the database
-    private bool eventListenerAdded = false; // Flag to track if event listener has been added
 
     /// <summary>
     /// Decrease hunger when time passes
@@ -204,11 +203,13 @@ public class PetDataHandler : MonoBehaviour
             });
         });
     }
+
     /// <summary>
     /// Decrease happiness and hunger when hunger is low
     /// </summary>
     /// <param name="petName"></param>
     /// <param name="amount"></param>
+
     public void DecreaseHappinessAndHunger(string petName, int amount)
     {
         var db = FirebaseDatabase.DefaultInstance.RootReference;
@@ -254,6 +255,9 @@ public class PetDataHandler : MonoBehaviour
         });
     }
 
+    /// <summary>
+    /// Toggle petting state and update button text/color
+    /// </summary>
     public void ActivatePetting()
     {
         isPetting = !isPetting;
@@ -290,6 +294,7 @@ public class PetDataHandler : MonoBehaviour
             }
         }
     }
+    
     /// <summary>
     /// Press play with pet to increase happiness
     /// </summary>
@@ -406,6 +411,7 @@ public class PetDataHandler : MonoBehaviour
             }
         });
     }
+    
     /// <summary>
     /// Increase pet level when happiness reaches 100
     /// Reset hunger and happiness after leveling up
@@ -556,7 +562,13 @@ public class PetDataHandler : MonoBehaviour
         yield return new WaitForSeconds(delay);
         statChangeMsg.text = "";
     }
-    public void OnPetDataChanged(object sender, ValueChangedEventArgs args)
+    
+    /// <summary>
+    /// Event handler for pet data updates from Firebase Realtime Database
+    /// </summary>
+    /// <param name="sender"></param>
+    /// <param name="args"></param>
+    public void PetDataUpdate(object sender, ValueChangedEventArgs args)
     {
         if (args.DatabaseError != null)
         {
@@ -566,47 +578,54 @@ public class PetDataHandler : MonoBehaviour
 
         if (args.Snapshot.Exists)
         {
-            LoadPetData(); // Reload pet data from database
-            Debug.Log("Pet data updated from database.");
+            string json = args.Snapshot.GetRawJsonValue();
+            Pet updatedPet = JsonUtility.FromJson<Pet>(json);
+
+            // Update local pet data
+            petName = updatedPet.petName;
+            level = updatedPet.level;
+            hunger = updatedPet.hunger;
+            happiness = updatedPet.happiness;
+
+            // Update UI elements
+            petNameText.text = "Pet Name: " + updatedPet.petName;
+            petLevelText.text = "Level: " + updatedPet.level.ToString();
+            petHungerText.text = "Hunger: " + updatedPet.hunger.ToString();
+            petHappinessText.text = "Happiness: " + updatedPet.happiness.ToString();
+            lastFedText.text = "Last Fed: " + updatedPet.lastFed;
         }
     }
+
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
         statChangeMsg.text = "";
         cooldownMsg.text = "";
-        if (eventListenerAdded == false)
-        {
-            petRef = FirebaseDatabase.DefaultInstance.RootReference
-                .Child("users")
-                .Child(FirebaseAuth.DefaultInstance.CurrentUser.UserId)
-                .Child("pets")
-                .Child(prefabType);
-
-            petRef.ValueChanged += OnPetDataChanged;
-            eventListenerAdded = true;
-        }
     }
 
-    // Decrease hunger and happiness on a reliable time interval
-    // Guard against calling Firebase code when the user is not signed in or petName is not set.
+    // Update is called once per frame
     void Update()
     {
-        if (!isPetDataLoaded)
+        if (!isPetDataLoaded) // only attempt to load pet data once upon sign-in
         {
             var user = FirebaseAuth.DefaultInstance.CurrentUser;
             if (user != null)
             {
                 LoadPetData();
                 isPetDataLoaded = true;
+                var PetDataRef = FirebaseDatabase.DefaultInstance.GetReference("users").Child(user.UserId).Child("pets").Child(prefabType);
+                PetDataRef.ValueChanged += PetDataUpdate;
             }
         } else if (FirebaseAuth.DefaultInstance.CurrentUser == null)
         {
             // User signed out; reset flag to attempt reload on next Update
             isPetDataLoaded = false;
+            var PetDataRef = FirebaseDatabase.DefaultInstance.GetReference("users").Child(FirebaseAuth.DefaultInstance.CurrentUser.UserId).Child("pets").Child(prefabType);
+            PetDataRef.ValueChanged -= PetDataUpdate;
             return;
         }
-        // advance timer based on real time
+
+        // Update hunger and happiness based on time interval
         hungerTimer += Time.deltaTime;
         if (hungerTimer >= hungerInterval)
         {
@@ -624,24 +643,14 @@ public class PetDataHandler : MonoBehaviour
                 // No active pet selected yet.
                 return;
             }
-            // Decrease hunger every interval
-            if (hunger > 95)
+
+            if (hunger >= 60) // Decrease hunger only if hunger is high
             {
                 DecreaseHunger(petName, 2);
             }
-            // Decrease happiness and hunger every interval if hunger is below a certain threshold
-            if (hunger <= 60 && hunger > 0)
+            else if (hunger < 60) // Decrease happiness and hunger if hunger is low
             {
                 DecreaseHappinessAndHunger(petName, 3);
-            }
-            else if (hunger == 0)
-            {
-                DecreaseHappinessAndHunger(petName, 3);
-            }
-            // Increase level if happiness reaches 100
-            if (happiness == 100)
-            {
-                IncreaseLevel(petName);
             }
         }
     }
