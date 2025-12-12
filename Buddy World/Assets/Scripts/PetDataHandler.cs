@@ -1,7 +1,7 @@
 /*
     Author: Yeong Yu Seong
     Date Created: 12 November 2025
-    Date Modified: 10 December 2025
+    Date Modified: 11 December 2025
     Description: Handles pet data operations such as loading, updating, and displaying pet stats from Firebase Realtime Database.
 */
 using UnityEngine;
@@ -10,13 +10,15 @@ using TMPro;
 using Firebase.Database;
 using Firebase.Auth;
 using Firebase.Extensions;
-using System;
 using System.Collections;
 
 public class PetDataHandler : MonoBehaviour
 {
     [SerializeField]
     private string prefabType; // Type of the pet prefab (e.g., "Dog", "Cat")
+    [SerializeField]
+    private AccountManager accountManager; // Reference to the AccountManager script
+
     /// <summary>
     /// UI Elements to display pet data
     /// </summary>
@@ -32,27 +34,49 @@ public class PetDataHandler : MonoBehaviour
     private TMP_Text petHappinessText; // Text element to display pet happiness
     [SerializeField]
     private TMP_Text lastFedText; // Text element to display last fed time
+
     /// <summary>
     /// Reference to the pet data UI object
     /// </summary>
     [SerializeField]
     private GameObject petDataObject; // Reference to the pet data UI object
+
     /// <summary>
     /// Pet data fields
     /// </summary>
-    private string petName; // Current pet name
+    public string petName; // Current pet name
     private int hunger; // hunger level
     private int happiness; // happiness level
     private int level; // pet level
+
     /// <summary>
     /// Timer to run hunger/happiness updates on a time interval instead of frame count
     /// </summary>
     private float hungerTimer = 0f; // Timer to track hunger updates
-    private const float hungerInterval = 60f; // Interval in seconds to decrease hunger/happiness
+
+    /// <summary>
+    /// Game settings loaded from database
+    /// </summary>
+    public float decayRate; // Rate at which hunger and happiness decay
+    public float hungerDecayRate; // Rate at which hunger decays
+    public float happinessDecayRate; // Rate at which happiness decays
+    public float fasterHungerDecayRate; // Increased rate at which hunger decays when hunger is low
+    public float maxhunger; // Maximum hunger value
+    public float maxhappiness; // Maximum happiness value
+    public float maxlevel; // Maximum level value
+    public float actionsCooldown; // Cooldown time for actions
+    public float actionsEffectDuration; // Duration of action effects
+    public float playHappinessIncrease; // Happiness increase amount when playing
+    public float feedHungerIncrease; // Hunger increase amount when feeding
+    public float hungerResetLevel; // Hunger reset value on level up
+    public float happinessResetLevel; // Happiness reset value on level up
+    public float happinessDecreaseThreshold; // Happiness decrease threshold when hunger is low
+
     /// <summary>
     /// Flag to track if pet data has been loaded
     /// </summary>
     private bool isPetDataLoaded = false; // Flag to track if pet data has been loaded
+
     /// <summary>
     /// UI Elements for renaming pet
     /// </summary>
@@ -61,11 +85,12 @@ public class PetDataHandler : MonoBehaviour
     [SerializeField]
     private TMP_Text petNames; // Text element to display pet name in rename section
     private string newPetName; // New pet name for renaming
+
     /// <summary>
-    /// GameObjects for dog eating animation
+    /// Pet actions UI and effects
     /// </summary>
     [SerializeField]
-    private GameObject petFood; // Pet food object to show when eating
+    public GameObject petFood; // Pet food object to show when eating
     [SerializeField]
     private GameObject pet; // Pet object to animate when eating
     private Animator petAnimator; // Animator component for the pet
@@ -76,6 +101,7 @@ public class PetDataHandler : MonoBehaviour
     private TMP_Text statChangeMsg; // Text element to display stat change messages
     [SerializeField]
     private TMP_Text cooldownMsg; // Text element to display cooldown messages
+
     /// <summary>
     /// Audio sources for pet sounds
     /// </summary>
@@ -86,6 +112,7 @@ public class PetDataHandler : MonoBehaviour
     [SerializeField]
     private AudioSource petNormalSound; // Sound effect for pet normal state
     private bool isPetting = false; // Flag to track if pet is being petted
+    public bool isFeeding = false;
     [SerializeField]
     private Button petButton; // Button element to display petting message
     [SerializeField]
@@ -96,7 +123,7 @@ public class PetDataHandler : MonoBehaviour
     /// Decrease hunger when time passes
     /// </summary>
     /// <param name="petName"></param>
-    public void DecreaseHunger(string petName, int amount)
+    public void DecreaseHunger(string petName, float hungerDecayRate)
     {
         var db = FirebaseDatabase.DefaultInstance.RootReference;
         var user = Firebase.Auth.FirebaseAuth.DefaultInstance.CurrentUser;
@@ -118,7 +145,7 @@ public class PetDataHandler : MonoBehaviour
             string json = snapshot.GetRawJsonValue();
             Pet pet = JsonUtility.FromJson<Pet>(json);
 
-            pet.hunger = Mathf.Max(0, pet.hunger - amount); // Decrease hunger but not below 0
+            pet.hunger = (int)Mathf.Max(0, pet.hunger - hungerDecayRate); // Decrease hunger but not below 0
             petHungerText.text = "Hunger: " + pet.hunger.ToString();
             hunger = pet.hunger;
 
@@ -133,7 +160,7 @@ public class PetDataHandler : MonoBehaviour
                 {
                     // successfully updated hunger in DB; update UI already done above
                     petHungerText.text = "Hunger: " + pet.hunger.ToString();
-                    statChangeMsg.text = "Hunger decreased! -" + amount;
+                    statChangeMsg.text = "Hunger decreased! -" + hungerDecayRate;
                     StartCoroutine(StartStatChangeMessageClear(5f));
                 }
             });
@@ -174,7 +201,7 @@ public class PetDataHandler : MonoBehaviour
             string json = snapshot.GetRawJsonValue();
             Pet pet = JsonUtility.FromJson<Pet>(json);
 
-            pet.hunger = Mathf.Min(100, pet.hunger + 10); // Increase hunger but not above 100
+            pet.hunger = (int)Mathf.Min(maxhunger, pet.hunger + feedHungerIncrease); // Increase hunger but not above 100
             pet.lastFed = System.DateTime.Now.ToString();
             petHungerText.text = "Hunger: " + pet.hunger.ToString();
             lastFedText.text = "Last Fed: " + pet.lastFed;
@@ -197,7 +224,7 @@ public class PetDataHandler : MonoBehaviour
                     isCooldownActive = true;
                     petNormalSound.Stop();
                     petEatSound.Play(); // Play eating sound effect
-                    StartCoroutine(CooldownCoroutine(25f)); // Set cooldown duration here (e.g., 30 seconds)
+                    StartCoroutine(CooldownCoroutine(actionsCooldown)); // Set cooldown duration here (e.g., 30 seconds)
                     StartCoroutine(StartStatChangeMessageClear(5f));
                 }
             });
@@ -210,7 +237,7 @@ public class PetDataHandler : MonoBehaviour
     /// <param name="petName"></param>
     /// <param name="amount"></param>
 
-    public void DecreaseHappinessAndHunger(string petName, int amount)
+    public void DecreaseHappinessAndHunger(string petName, float happinessDecayRate, float fasterHungerDecayRate)
     {
         var db = FirebaseDatabase.DefaultInstance.RootReference;
         var user = Firebase.Auth.FirebaseAuth.DefaultInstance.CurrentUser;
@@ -232,8 +259,8 @@ public class PetDataHandler : MonoBehaviour
             string json = snapshot.GetRawJsonValue();
             Pet pet = JsonUtility.FromJson<Pet>(json);
 
-            pet.happiness = Mathf.Max(0, pet.happiness - amount); // Decrease happiness but not below 0
-            pet.hunger = Mathf.Max(0, pet.hunger - amount); // Decrease hunger but not below 0
+            pet.happiness = (int)Mathf.Max(0, pet.happiness - happinessDecayRate); // Decrease happiness but not below 0
+            pet.hunger = (int)Mathf.Max(0, pet.hunger - fasterHungerDecayRate); // Decrease hunger but not below 0
             happiness = pet.happiness;
             hunger = pet.hunger;
 
@@ -248,7 +275,7 @@ public class PetDataHandler : MonoBehaviour
                 {
                     petHappinessText.text = "Happiness: " + pet.happiness.ToString();
                     petHungerText.text = "Hunger: " + pet.hunger.ToString();
-                    statChangeMsg.text = "Happiness and Hunger decreased! -" + amount;
+                    statChangeMsg.text = "Happiness and Hunger decreased! -" + happinessDecayRate;
                     StartCoroutine(StartStatChangeMessageClear(5f));
                 }
             });
@@ -261,6 +288,7 @@ public class PetDataHandler : MonoBehaviour
     public void ActivatePetting()
     {
         isPetting = !isPetting;
+        infoPanel.SetActive(false);
         if (petButton != null)
         {
             var tmpText = petButton.GetComponentInChildren<TMP_Text>();
@@ -333,8 +361,12 @@ public class PetDataHandler : MonoBehaviour
             string json = snapshot.GetRawJsonValue();
             Pet pet = JsonUtility.FromJson<Pet>(json);
 
-            pet.happiness = Mathf.Min(100, pet.happiness + 8); // Increase happiness but not above 100
+            pet.happiness = (int)Mathf.Min(maxhappiness, pet.happiness + playHappinessIncrease); // Increase happiness but not above 100
             happiness = pet.happiness;
+            if (pet.happiness >= maxhappiness)
+            {
+                IncreaseLevel(petName); // Call level up function if happiness reaches max
+            }
 
             string updatedJson = JsonUtility.ToJson(pet);
             db.Child("users").Child(user.UserId).Child("pets").Child(prefabType).SetRawJsonValueAsync(updatedJson).ContinueWithOnMainThread(updateTask =>
@@ -352,7 +384,7 @@ public class PetDataHandler : MonoBehaviour
                     petNormalSound.Stop();
                     petHappySound.Play(); // Play happy sound effect
                     petAnimator.SetTrigger("playTrigger");
-                    StartCoroutine(CooldownCoroutine(25f)); // Set cooldown duration here (e.g., 30 seconds)
+                    StartCoroutine(CooldownCoroutine(actionsCooldown)); // Set cooldown duration here (e.g., 30 seconds)
                     StartCoroutine(StartStatChangeMessageClear(5f));
                 }
             });
@@ -438,11 +470,15 @@ public class PetDataHandler : MonoBehaviour
             DataSnapshot snapshot = task.Result;
             string json = snapshot.GetRawJsonValue();
             Pet pet = JsonUtility.FromJson<Pet>(json);
-
+            if (pet.level >= maxlevel)
+            {
+                Debug.Log("Pet has reached maximum level; cannot level up further.");
+                return;
+            }
             pet.level += 1; // Increase level by 1
             level = pet.level;
-            hunger = 55;
-            happiness = 65;
+            hunger = (int)hungerResetLevel; // Reset hunger
+            happiness = (int)happinessResetLevel; // Reset happiness
             pet.hunger = hunger;
             pet.happiness = happiness;
             string updatedJson = JsonUtility.ToJson(pet);
@@ -528,7 +564,10 @@ public class PetDataHandler : MonoBehaviour
     /// <returns></returns>
     IEnumerator CooldownCoroutine(float cooldownTime)
     {
-        yield return new WaitForSeconds(5f); // Short delay to allow action effects to play
+        cooldownTime = actionsCooldown - actionsEffectDuration;
+        Debug.Log("Action effect duration: " + actionsEffectDuration + " seconds.");
+        yield return new WaitForSeconds(actionsEffectDuration); // Short delay to allow action effects to play
+        Debug.Log("Cooldown started for " + cooldownTime + " seconds.");
         if (loveParticles.isPlaying)
         {
             loveParticles.Stop();
@@ -596,6 +635,59 @@ public class PetDataHandler : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Load game settings from Firebase Realtime Database
+    /// </summary>
+    public void LoadGameSettings()
+    {
+        var settingsTask = FirebaseDatabase.DefaultInstance.GetReference("gameSettings").GetValueAsync();
+        settingsTask.ContinueWithOnMainThread(task =>
+        {
+            if (task.IsFaulted || task.IsCanceled)
+            {
+                Debug.LogError("Error loading game settings: " + (task.Exception != null ? task.Exception.Message : "Task canceled"));
+                return;
+            }
+
+            if (task.IsCompleted)
+            {
+                DataSnapshot snapshot = task.Result;
+                string json = snapshot.GetRawJsonValue();
+                if (!string.IsNullOrEmpty(json))
+                {
+                    GameSettings settings = JsonUtility.FromJson<GameSettings>(json);
+                    if (settings != null)
+                    {
+                        Debug.Log("Game settings loaded successfully.");
+                        // Apply settings as needed
+                        decayRate = settings.decayRate;
+                        hungerDecayRate = settings.hungerDecayRate;
+                        happinessDecayRate = settings.happinessDecayRate;
+                        fasterHungerDecayRate = settings.fasterHungerDecayRate;
+                        maxhunger = settings.maxhunger;
+                        maxhappiness = settings.maxhappiness;
+                        maxlevel = settings.maxlevel;
+                        actionsCooldown = settings.actionsCooldown;
+                        actionsEffectDuration = settings.actionsEffectDuration;
+                        playHappinessIncrease = settings.playHappinessIncrease;
+                        feedHungerIncrease = settings.feedHungerIncrease;
+                        hungerResetLevel = settings.hungerResetLevel;
+                        happinessResetLevel = settings.happinessResetLevel;
+                        happinessDecreaseThreshold = settings.happinessDecreaseThreshold;
+                    }
+                    else
+                    {
+                        Debug.LogWarning("Failed to parse game settings JSON.");
+                    }
+                }
+                else
+                {
+                    Debug.LogWarning("Game settings JSON is empty.");
+                }
+            }
+        });
+    }
+
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
@@ -612,6 +704,7 @@ public class PetDataHandler : MonoBehaviour
             if (user != null)
             {
                 LoadPetData();
+                LoadGameSettings();
                 isPetDataLoaded = true;
                 var PetDataRef = FirebaseDatabase.DefaultInstance.GetReference("users").Child(user.UserId).Child("pets").Child(prefabType);
                 PetDataRef.ValueChanged += PetDataUpdate;
@@ -627,7 +720,7 @@ public class PetDataHandler : MonoBehaviour
 
         // Update hunger and happiness based on time interval
         hungerTimer += Time.deltaTime;
-        if (hungerTimer >= hungerInterval)
+        if (hungerTimer >= decayRate)
         {
             hungerTimer = 0f;
 
@@ -644,13 +737,13 @@ public class PetDataHandler : MonoBehaviour
                 return;
             }
 
-            if (hunger >= 60) // Decrease hunger only if hunger is high
+            if (hunger >= happinessDecreaseThreshold) // Decrease hunger only if hunger is high
             {
-                DecreaseHunger(petName, 2);
+                DecreaseHunger(petName, hungerDecayRate);
             }
-            else if (hunger < 60) // Decrease happiness and hunger if hunger is low
+            else if (hunger < happinessDecreaseThreshold) // Decrease happiness and hunger if hunger is low
             {
-                DecreaseHappinessAndHunger(petName, 3);
+                DecreaseHappinessAndHunger(petName, happinessDecayRate, fasterHungerDecayRate);
             }
         }
     }

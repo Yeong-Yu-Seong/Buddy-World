@@ -1,6 +1,6 @@
 /* Author: Yeong Yu Seong
    Date: 11 November 2025
-   Last Modified: 2 December 2025
+   Last Modified: 11 December 2025
    Description: Database manager script to handle pet data structure.
 */
 using UnityEngine;
@@ -51,4 +51,21 @@ public class Pet
         this.lastFed = lastFed;
         this.prefabType = prefabType;
     }
+}
+public class GameSettings
+{
+    public float decayRate;
+    public float hungerDecayRate;
+    public float happinessDecayRate;
+    public float fasterHungerDecayRate;
+    public float maxhunger;
+    public float maxhappiness;
+    public float maxlevel;
+    public float actionsCooldown;
+    public float actionsEffectDuration;
+    public float playHappinessIncrease;
+    public float feedHungerIncrease;
+    public float hungerResetLevel;
+    public float happinessResetLevel;
+    public float happinessDecreaseThreshold;
 }

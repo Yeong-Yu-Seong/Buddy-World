@@ -1,6 +1,6 @@
 /* Author: Yeong Yu Seong
    Date: 11 November 2025
-   Last Modified: 10 December 2025
+   Last Modified: 11 December 2025
    Description: Account manager script to handle user authentication and account management.
    Info: This script is written with the help of the fix code function and ChatGPT.
 */
@@ -46,12 +46,12 @@ public class AccountManager : MonoBehaviour
     /// <summary>
     /// Reference to the Firebase Realtime Database.
     /// </summary>
-    private DatabaseReference db;
-    private DatabaseReference petRef;
-    private FirebaseAuth auth;
-    private FirebaseUser lastUser;
-    private string currentUserId;
-    
+    private DatabaseReference db; // Reference to the Firebase Realtime Database
+    private DatabaseReference petRef; // Reference to the current user's pet data
+    private FirebaseAuth auth; // Firebase Authentication instance
+    private FirebaseUser lastUser; // To track the last signed-in user
+    private string currentUserId; // Current user's UID
+
     /// <summary>
     /// Creates a new user account with the provided email and password.
     /// </summary>
@@ -245,6 +245,7 @@ public class AccountManager : MonoBehaviour
                     }
                 }
             });
+
             // Start a coroutine that shows the loading canvas and then switches to gameplay after a delay
             StartCoroutine(ShowLoadingThenSwitch(2f));
         });
@@ -444,7 +445,6 @@ public class AccountManager : MonoBehaviour
             petRef = null;
         }
     }
-
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
