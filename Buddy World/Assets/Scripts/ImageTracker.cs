@@ -80,6 +80,7 @@ public class ImageTracker : MonoBehaviour
                 {
                     petScript.enabled = true;
                     petScript.LoadPetData();
+                    petScript.isCooldownActive = false;
                 }
                 Debug.Log(trackedImage.gameObject.name + " is being tracked.");
                 //Enable the associated content

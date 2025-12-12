@@ -1,7 +1,7 @@
 /*
     Author: Yeong Yu Seong
     Date Created: 12 November 2025
-    Date Modified: 11 December 2025
+    Date Modified: 12 December 2025
     Description: Handles pet data operations such as loading, updating, and displaying pet stats from Firebase Realtime Database.
 */
 using UnityEngine;
@@ -34,6 +34,10 @@ public class PetDataHandler : MonoBehaviour
     private TMP_Text petHappinessText; // Text element to display pet happiness
     [SerializeField]
     private TMP_Text lastFedText; // Text element to display last fed time
+    [SerializeField]
+    private Image hungerBar; // Image element to display hunger bar
+    [SerializeField]
+    private Image happinessBar; // Image element to display happiness bar
 
     /// <summary>
     /// Reference to the pet data UI object
@@ -96,7 +100,7 @@ public class PetDataHandler : MonoBehaviour
     private Animator petAnimator; // Animator component for the pet
     [SerializeField]
     private ParticleSystem loveParticles; // Particle system for playing effect
-    private bool isCooldownActive = false; // Flag to track if cooldown is active
+    public bool isCooldownActive = false; // Flag to track if cooldown is active
     [SerializeField]
     private TMP_Text statChangeMsg; // Text element to display stat change messages
     [SerializeField]
@@ -112,7 +116,6 @@ public class PetDataHandler : MonoBehaviour
     [SerializeField]
     private AudioSource petNormalSound; // Sound effect for pet normal state
     private bool isPetting = false; // Flag to track if pet is being petted
-    public bool isFeeding = false;
     [SerializeField]
     private Button petButton; // Button element to display petting message
     [SerializeField]
@@ -159,7 +162,7 @@ public class PetDataHandler : MonoBehaviour
                 else
                 {
                     // successfully updated hunger in DB; update UI already done above
-                    petHungerText.text = "Hunger: " + pet.hunger.ToString();
+                    petHungerText.text = pet.hunger.ToString();
                     statChangeMsg.text = "Hunger decreased! -" + hungerDecayRate;
                     StartCoroutine(StartStatChangeMessageClear(5f));
                 }
@@ -216,7 +219,7 @@ public class PetDataHandler : MonoBehaviour
                 }
                 else
                 {
-                    petHungerText.text = "Hunger: " + pet.hunger.ToString();
+                    petHungerText.text = pet.hunger.ToString();
                     lastFedText.text = "Last Fed: " + pet.lastFed;
                     statChangeMsg.text = "Hunger increased! +10";
                     petFood.SetActive(true);
@@ -273,8 +276,8 @@ public class PetDataHandler : MonoBehaviour
                 }
                 else
                 {
-                    petHappinessText.text = "Happiness: " + pet.happiness.ToString();
-                    petHungerText.text = "Hunger: " + pet.hunger.ToString();
+                    petHappinessText.text = pet.happiness.ToString();
+                    petHungerText.text = pet.hunger.ToString();
                     statChangeMsg.text = "Happiness and Hunger decreased! -" + happinessDecayRate;
                     StartCoroutine(StartStatChangeMessageClear(5f));
                 }
@@ -377,7 +380,7 @@ public class PetDataHandler : MonoBehaviour
                 }
                 else
                 {
-                    petHappinessText.text = "Happiness: " + pet.happiness.ToString();
+                    petHappinessText.text = pet.happiness.ToString();
                     statChangeMsg.text = "Happiness increased! +8";
                     loveParticles.Play(); // Play love particle effect
                     isCooldownActive = true;
@@ -429,14 +432,38 @@ public class PetDataHandler : MonoBehaviour
                 petNameText.text = "Pet Name: " + currentPet.petName;
                 ownerIDText.text = "Owner ID: " + currentPet.ownerID;
                 petLevelText.text = "Level: " + currentPet.level.ToString();
-                petHungerText.text = "Hunger: " + currentPet.hunger.ToString();
-                petHappinessText.text = "Happiness: " + currentPet.happiness.ToString();
+                petHungerText.text = currentPet.hunger.ToString();
+                petHappinessText.text = currentPet.happiness.ToString();
                 lastFedText.text = "Last Fed: " + currentPet.lastFed;
                 hunger = currentPet.hunger;
                 happiness = currentPet.happiness;
                 level = currentPet.level;
                 petFood.SetActive(false);
                 petAnimator = pet.GetComponent<Animator>();
+                if (hunger/maxhunger < 0.5f && hunger/maxhunger >= 0.3f)
+                {
+                    hungerBar.color = Color.yellow; // Set color to yellow if hunger is below 50%
+                }else if (hunger/maxhunger < 0.3f)
+                {
+                    hungerBar.color = Color.red; // Set color to red if hunger is below 30%
+                }
+                else
+                {
+                    hungerBar.color = Color.green; // Reset color to green otherwise
+                }
+                if (happiness/maxhappiness < 0.5f && happiness/maxhappiness >= 0.3f)
+                {
+                    happinessBar.color = Color.yellow; // Set color to yellow if happiness is below 50%
+                }else if (happiness/maxhappiness < 0.3f)
+                {
+                    happinessBar.color = Color.red; // Set color to red if happiness is below 30%
+                }
+                else
+                {
+                    happinessBar.color = Color.green; // Reset color to green otherwise
+                }
+                hungerBar.fillAmount = hunger / maxhunger;
+                happinessBar.fillAmount = happiness / maxhappiness;
                 Debug.Log("Loaded pet data for pet: " + currentPet.petName);
                 petNormalSound.Play(); // Play normal sound effect
                 break; // Exit loop after finding the matching pet
@@ -491,8 +518,8 @@ public class PetDataHandler : MonoBehaviour
                 else
                 {
                     petLevelText.text = "Level: " + pet.level.ToString();
-                    petHungerText.text = "Hunger: " + pet.hunger.ToString();
-                    petHappinessText.text = "Happiness: " + pet.happiness.ToString();
+                    petHungerText.text = pet.hunger.ToString();
+                    petHappinessText.text = pet.happiness.ToString();
                     statChangeMsg.text = "Level increased! +1";
                     StartCoroutine(StartStatChangeMessageClear(5f));
                 }
@@ -629,9 +656,33 @@ public class PetDataHandler : MonoBehaviour
             // Update UI elements
             petNameText.text = "Pet Name: " + updatedPet.petName;
             petLevelText.text = "Level: " + updatedPet.level.ToString();
-            petHungerText.text = "Hunger: " + updatedPet.hunger.ToString();
-            petHappinessText.text = "Happiness: " + updatedPet.happiness.ToString();
+            petHungerText.text = updatedPet.hunger.ToString();
+            petHappinessText.text = updatedPet.happiness.ToString();
             lastFedText.text = "Last Fed: " + updatedPet.lastFed;
+            if (hunger/maxhunger < 0.5f && hunger/maxhunger >= 0.3f)
+            {
+                hungerBar.color = Color.yellow; // Set color to yellow if hunger is below 50%
+            }else if (hunger/maxhunger < 0.3f)
+            {
+                hungerBar.color = Color.red; // Set color to red if hunger is below 30%
+            }
+            else
+            {
+                hungerBar.color = Color.green; // Reset color to green otherwise
+            }
+            if (happiness/maxhappiness < 0.5f && happiness/maxhappiness >= 0.3f)
+            {
+                happinessBar.color = Color.yellow; // Set color to yellow if happiness is below 50%
+            }else if (happiness/maxhappiness < 0.3f)
+            {
+                happinessBar.color = Color.red; // Set color to red if happiness is below 30%
+            }
+            else
+            {
+                happinessBar.color = Color.green; // Reset color to green otherwise
+            }
+            hungerBar.fillAmount = hunger / maxhunger;
+            happinessBar.fillAmount = happiness / maxhappiness;
         }
     }
 

@@ -1,6 +1,6 @@
 /* Author: Yeong Yu Seong
    Date: 11 November 2025
-   Last Modified: 11 December 2025
+   Last Modified: 12 December 2025
    Description: Account manager script to handle user authentication and account management.
    Info: This script is written with the help of the fix code function and ChatGPT.
 */
@@ -24,11 +24,15 @@ public class AccountManager : MonoBehaviour
     private TMP_InputField EmailInput; // Input field for email
     [SerializeField]
     private TMP_InputField PasswordInput; // Input field for password
+    [SerializeField]
+    private TMP_InputField EmailResetInput; // Input field for password reset email
     /// <summary>
     /// UI elements for displaying errors and managing canvases.
     /// </summary>
     [SerializeField]
     private TMP_Text errorText; // To display error messages
+    [SerializeField]
+    private TMP_Text resetPasswordText; // To display reset password messages
     [SerializeField]
     private Canvas signInCanvas; // Canvas for sign-in and sign-up
     [SerializeField]
@@ -268,6 +272,59 @@ public class AccountManager : MonoBehaviour
             Debug.LogWarning("SignOut threw an exception: " + ex.Message);
         }
         StartCoroutine(ShowLoadingThenSignIn(1.5f));
+    }
+
+    /// <summary>
+    /// Sends a password reset email to the provided email address.
+    /// </summary>
+    public void ResetPassword()
+    {
+        string email = EmailResetInput.text;
+        resetPasswordText.text = "";
+        resetPasswordText.color = new Color32(217, 132, 132, 255); // Default to red for error messages
+        if (string.IsNullOrEmpty(email))
+        {
+            resetPasswordText.text = "Please enter your email address to reset password.";
+            return;
+        }
+
+        FirebaseAuth.DefaultInstance.SendPasswordResetEmailAsync(email).ContinueWithOnMainThread(task =>
+        {
+            if (task.IsFaulted)
+            {
+                var baseException = task.Exception.GetBaseException();
+                if (baseException is FirebaseException)
+                {
+                    var firebaseException = baseException as FirebaseException;
+                    var errorCode = (AuthError)firebaseException.ErrorCode;
+
+                    switch (errorCode)
+                    {
+                        case AuthError.InvalidEmail:
+                            resetPasswordText.text = "The email address is invalid!";
+                            break;
+                        case AuthError.UserNotFound:
+                            resetPasswordText.text = "No user found with this email!";
+                            break;
+                        case AuthError.NetworkRequestFailed:
+                            resetPasswordText.text = "Network error, please try again later!";
+                            break;
+                        default:
+                            resetPasswordText.text = $"Unknown Firebase exception: {errorCode}";
+                            break;
+                    }
+                    return;
+                }
+                resetPasswordText.text = $"Unknown exception when sending password reset email: {baseException.Message}";
+                return;
+            }
+
+            if (task.IsCompletedSuccessfully)
+            {
+                resetPasswordText.text = "Password reset email sent successfully!";
+                resetPasswordText.color = new Color32(86, 171, 5, 255); // Light green color
+            }
+        });
     }
 
     /// <summary>
