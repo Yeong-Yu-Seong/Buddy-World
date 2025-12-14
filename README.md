@@ -6,6 +6,9 @@ Buddy World is an AR pet care game where players can adopt, feed, and interact w
 
 Pets are spawned using physical AR tracking cards, creating an interactive experience where the real world and digital pets merge.
 
+Walkthrough video:
+[ITD_Asg1_BuddyWorld_Video](https://www.youtube.com/watch?v=hNWiz99mZb8)
+
 ---
 
 ## Platforms / Hardware Requirements
@@ -74,6 +77,8 @@ All interactions are touch-based on the mobile device screen.
 - Some older devices may experience reduced AR performance.
 - Physical AR cards are required to spawn pets.
 - New users may need to restart the app or re-login for data to load after signing up.
+- Cooldown timer may be bugged, current solution is that I reset the timer whenever you stop viewing the pet.
+- Hunger and happiness bar not loaded properly, need to rescan the card.
 
 ---
 

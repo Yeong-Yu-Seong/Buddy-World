@@ -62,6 +62,7 @@ public class AccountManager : MonoBehaviour
     public void SignUp()
     {
         errorText.text = "";
+        errorText.color = new Color32(217, 132, 132, 255); // Reset to default red color
 
         var createTask = FirebaseAuth.DefaultInstance.CreateUserWithEmailAndPasswordAsync(EmailInput.text, PasswordInput.text);
         createTask.ContinueWithOnMainThread(task =>
@@ -116,6 +117,7 @@ public class AccountManager : MonoBehaviour
             if (task.IsCompletedSuccessfully)
             {
                 errorText.text = "User created successfully, please sign in!";
+                errorText.color = new Color32(86, 171, 5, 255); // Light green color
 
                 var uid = task.Result.User.UserId;
                 db.Child("users").Child(uid).Child("email").SetValueAsync(EmailInput.text);
@@ -129,6 +131,7 @@ public class AccountManager : MonoBehaviour
     /// </summary>
     public void SignIn()
     {
+        errorText.color = new Color32(217, 132, 132, 255); // Reset to default red color
         var signInTask = FirebaseAuth.DefaultInstance.SignInWithEmailAndPasswordAsync(EmailInput.text, PasswordInput.text);
         signInTask.ContinueWithOnMainThread(task =>
         {
